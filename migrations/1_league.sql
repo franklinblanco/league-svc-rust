@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS league (
     sport_id INT NOT NULL,
     time_created DATETIME NOT NULL,
     last_updated DATETIME NOT NULL,
+    state VARCHAR(255) NOT NULL,
     visibility VARCHAR(255) NOT NULL,
     date_and_time DATETIME NOT NULL,
     cost_to_join DECIMAL(10, 2) NOT NULL,

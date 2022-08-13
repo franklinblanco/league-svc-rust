@@ -12,3 +12,5 @@ serde = { version = "1.0", features = ["derive"] }
 sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal" ] }
 actix-web = "4"
 chrono = { version = "0.4", features = [ "serde" ] }
+
+dev-macros = { git = "https://backend:Eo1n1TPsyWV7wwo9uFwgUJGKKheMM6paM2mDkVPA4zqkh5dt6Q6XPkbtojzYQudQsM84vSwKmhHHTPjyn535d6NLBmA3meeGj0Gb8if4sceAwvySdmzedg5mN2P5zzQt@gitea.blancoinfante.com/blancoinfante_backend/dev-macros.git" }

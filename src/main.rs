@@ -1,4 +1,5 @@
 use dao::main_dao::{self, run_all_migrations};
+use dev_macros::nigga;
 use routes::main_router::after_startup_fn;
 use util::env_util;
 
@@ -12,6 +13,10 @@ pub mod domain;
 
 #[tokio::main]
 async fn main() {
+
+    let deez = nigga!();
+    println!("{deez}");
+
     //  Retrieve env variables and send to services that need them.
     let env_vars = env_util::get_dot_env_map();
     
