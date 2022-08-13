@@ -2,7 +2,6 @@ use sqlx::{MySqlPool, mysql::MySqlQueryResult};
 
 use crate::domain::league::League;
 
-
 pub async fn insert_league(conn: &MySqlPool, league: League) -> Result<MySqlQueryResult, sqlx::Error>{
     sqlx::query_file!("sql/league/insert.sql", league.owner_id, league.sport_id, league.state, league.visibility, league.date_and_time, league.cost_to_join, league.currency, league.max_players, league.description).execute(conn).await
 }
