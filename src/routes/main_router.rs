@@ -9,7 +9,7 @@ pub fn after_startup_fn() {
 }
 
 pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPool, env_vars: HashMap<String, String>)
- -> Result<(), std::io::Error>
+-> Result<(), std::io::Error>
 {
 
     //  Get env variables to build server address

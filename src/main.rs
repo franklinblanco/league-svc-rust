@@ -7,6 +7,7 @@ use util::env_util;
 pub mod dao;
 pub mod routes;
 pub mod util;
+pub mod domain;
 
 
 #[tokio::main]
@@ -22,7 +23,6 @@ async fn main() {
 
     //  Run all migrations
     run_all_migrations(&mut db_conn).await;
-
 
     //  Pass shared state to server and start it
     routes::main_router::start_all_routes(&after_startup_fn, db_conn, env_vars).await.unwrap();

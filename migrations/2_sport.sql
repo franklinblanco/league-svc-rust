@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS sport (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    time_created DATETIME NOT NULL,
+    last_updated DATETIME NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    category_id INT NOT NULL
+);
