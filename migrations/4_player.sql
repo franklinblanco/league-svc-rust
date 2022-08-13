@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS player (
     birth_date DATETIME NOT NULL,
     country VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
+    identification_number VARCHAR(255),
     bio VARCHAR(2048),
     profile_picture_url VARCHAR(1024),
     id_verified TINYINT(1) NOT NULL,
