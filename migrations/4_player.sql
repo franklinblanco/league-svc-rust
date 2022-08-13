@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS player (
     last_updated DATETIME NOT NULL,
     name VARCHAR(255) NOT NULL,
     birth_date DATETIME NOT NULL,
+    country VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
     bio VARCHAR(2048),
     profile_picture_url VARCHAR(1024),
     id_verified TINYINT(1) NOT NULL,

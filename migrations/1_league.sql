@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS league (
     visibility VARCHAR(255) NOT NULL,
     date_and_time DATETIME NOT NULL,
     cost_to_join DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(20) NOT NULL,
     max_players INT NOT NULL,
     description VARCHAR(2048)
 );
