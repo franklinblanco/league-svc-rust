@@ -1,7 +1,6 @@
 UPDATE league SET 
     owner_id = ?,
     sport_id = ?,
-    time_created = NOW(),
     last_updated = NOW(),
     state = ?,
     visibility = ?,

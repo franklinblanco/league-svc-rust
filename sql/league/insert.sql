@@ -12,16 +12,16 @@ INSERT INTO league (
     max_players,
     description
 ) VALUES(
-NULL,
-?,
-?,
-NOW(),
-NOW(),
-?,
-?,
-?,
-?,
-?,
-?,
-?
+    NULL,
+    ?,
+    ?,
+    NOW(),
+    NOW(),
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
 )
