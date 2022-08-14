@@ -9,6 +9,7 @@ pub mod routes;
 pub mod util;
 pub mod domain;
 pub mod dto;
+pub mod middleware;
 
 #[tokio::main]
 async fn main() {
