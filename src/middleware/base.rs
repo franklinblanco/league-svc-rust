@@ -1,21 +1,24 @@
-use std::fmt::{Display, Debug};
-
 use serde::{Serialize, de::DeserializeOwned};
 
 use crate::domain::enums::error::Error;
 
-pub async fn perform_request<B: Serialize, R: DeserializeOwned, T: Display + Debug>(
+pub async fn perform_request<B: Serialize, R: DeserializeOwned>(
     base_url: String,
     client: &reqwest::Client,
     method: reqwest::Method,
     path: String,
     body: Option<B>,
     expected_status_code: u16,
-    _headers: Vec<(String, String)>,
+    headers: Vec<(String, String)>,
 ) -> Result<R, Error> {
-    
-    let req_incomplete =
+
+    let mut req_incomplete =
         client.request(method, format!("{url}{path}", url = base_url, path = path));
+
+    for header in headers {
+        req_incomplete = req_incomplete.header(&header.0, &header.1);
+    }
+
     let req_complete = match body {
         Some(b) => req_incomplete.json(&b),
         None => req_incomplete,
@@ -36,7 +39,7 @@ pub async fn perform_request<B: Serialize, R: DeserializeOwned, T: Display + Deb
                     Err(Error::UnexpectedStatusCode(
                         expected_status_code,
                         res.status().as_u16(),
-                        &res.text().await.unwrap(),
+                        res.text().await.unwrap(),
                     ))
                 }
             }
