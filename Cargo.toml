@@ -11,8 +11,10 @@ dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
 sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal" ] }
 actix-web = "4"
+actix-web-utils = "0.1"
 chrono = { version = "0.4", features = [ "serde" ] }
 reqwest = { version = "0.11.11", features = [ "json" ]}
 openssl = { version = "0.10", features = ["vendored"] }
 
 dev-dtos = { git = "https://backend:Eo1n1TPsyWV7wwo9uFwgUJGKKheMM6paM2mDkVPA4zqkh5dt6Q6XPkbtojzYQudQsM84vSwKmhHHTPjyn535d6NLBmA3meeGj0Gb8if4sceAwvySdmzedg5mN2P5zzQt@gitea.blancoinfante.com/blancoinfante_backend/dev-dtos-rust.git" }
+dev-communicators = { git = "https://backend:Eo1n1TPsyWV7wwo9uFwgUJGKKheMM6paM2mDkVPA4zqkh5dt6Q6XPkbtojzYQudQsM84vSwKmhHHTPjyn535d6NLBmA3meeGj0Gb8if4sceAwvySdmzedg5mN2P5zzQt@gitea.blancoinfante.com/blancoinfante_backend/dev-communicators-rust.git" }
