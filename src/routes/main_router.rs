@@ -1,5 +1,6 @@
-use std::{sync::{Mutex, Arc}, collections::HashMap};
+use std::{sync::{Arc}, collections::HashMap};
 use actix_web::{HttpServer, App, web};
+use reqwest::Client;
 use sqlx::MySqlPool;
 
 use super::player_routes::create_player_profile;
@@ -13,7 +14,6 @@ pub fn after_startup_fn() {
 pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPool, env_vars: HashMap<String, String>)
 -> Result<(), std::io::Error>
 {
-
     //  Get env variables to build server address
     let host_addr: &str = match env_vars.get("HOST_ADDRESS") {
         Some(str) => {str},
@@ -31,13 +31,15 @@ pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPo
 
     //  Extract variables to be put into shared app state & clone them
     let db_conn_state = web::Data::new(Arc::new(db_conn));
-    let env_vars_state = web::Data::new(Mutex::new(env_vars.clone()));
+    let env_vars_state = web::Data::new(Arc::new(env_vars.clone()));
+    let client_state = web::Data::new(Arc::new(Client::new()));
     //  Start server code that turns into a future to be executed below
     let server_future = HttpServer::new( move || {
         App::new()
         //  Define routes & pass in shared state
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
+            .app_data(client_state.clone())
             .service(web::scope("/").service(create_player_profile))
             //.service(user_routes::get_user_from_db)
     })

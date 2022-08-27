@@ -19,10 +19,12 @@ pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: Pl
 
     let persisted_token = match create_user(client, &user_for_creation).await {
         Ok(user) => user,
-        Err(err) => match err {
-            Error::UnexpectedStatusCode(_, actual, errorstr) => return TypedHttpResponse::return_standard_error(StatusCode::from_u16(actual).unwrap(), MessageResource::new_from_err(errorstr)),
-            _ => return TypedHttpResponse::return_empty_response(StatusCode::INTERNAL_SERVER_ERROR)
-        },
+        Err(err) => {
+            match err {
+                Error::UnexpectedStatusCode(_, actual, errorstr) => return TypedHttpResponse::return_standard_error(StatusCode::from_u16(actual).unwrap(), MessageResource::new_from_err(errorstr)),
+                _ => return TypedHttpResponse::return_standard_error(StatusCode::INTERNAL_SERVER_ERROR, MessageResource::new_from_err(err.to_string()))
+            };
+    },
     };
 
     match player_dao::insert_player(conn, Player::new_from_creation_dto(&player, &persisted_token.user_id)).await {
