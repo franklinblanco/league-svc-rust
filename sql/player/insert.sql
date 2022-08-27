@@ -1,4 +1,5 @@
 INSERT INTO player (
+    id,
     time_created,
     last_updated,
     name,
@@ -11,6 +12,7 @@ INSERT INTO player (
     id_verified,
     phone_number_verified
 ) VALUES (
+    ?,
     NOW(),
     NOW(), 
     ?,

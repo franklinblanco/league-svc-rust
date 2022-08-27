@@ -1,6 +1,5 @@
 use actix_web::{HttpResponse, post, get, web};
 
-
 #[post("/league")]
 pub async fn create_league() -> HttpResponse {
     HttpResponse::Ok().finish()

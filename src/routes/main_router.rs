@@ -1,6 +1,8 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use actix_web::{HttpServer, App, web};
 use sqlx::MySqlPool;
+
+use super::player_routes::create_player_profile;
 //use crate::r#do::shared_state::SharedStateObj;
 
 //  This function is to be used in case code is meant to be run after server startup
@@ -36,6 +38,7 @@ pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPo
         //  Define routes & pass in shared state
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
+            .service(web::scope("/").service(create_player_profile))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?
