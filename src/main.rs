@@ -10,6 +10,7 @@ pub mod util;
 pub mod domain;
 pub mod dto;
 pub mod service;
+pub mod validation;
 
 #[tokio::main]
 async fn main() {
