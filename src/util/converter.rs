@@ -3,9 +3,10 @@ use actix_web_utils::dtos::message::MessageResource;
 use crate::{dto::player_dtos::PlayerForUpdateDto, domain::player::Player, validation::player::player_validatior::{validate_name, validate_bio, validate_profile_picture_url, validate_birth_date, validate_country, validate_identification_number, validate_city}};
 
 
-pub fn update_player_object(update_player: PlayerForUpdateDto, existing_player: Player, message_resources: &mut Vec<MessageResource>) -> Player{
+pub fn update_player_object(update_player: PlayerForUpdateDto, existing_player: Player) -> Result<Player, Vec<MessageResource>>{
+    let mut message_resources: Vec<MessageResource> = Vec::new();
     let mut resulting_player: Player = existing_player.clone();
-    //TODO: Log change
+    //TODO: Log changes
     if let Some(name) = update_player.name { 
         match validate_name(&name) {
             Ok(_) => {resulting_player.name = name},
@@ -55,5 +56,9 @@ pub fn update_player_object(update_player: PlayerForUpdateDto, existing_player: 
         }
     };
 
-    resulting_player
+    if message_resources.len() > 0 {
+        return Err(message_resources);
+    } else {
+        return Ok(resulting_player);
+    }
 }
