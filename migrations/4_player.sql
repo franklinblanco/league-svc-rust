@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS player (
     time_created DATETIME NOT NULL,
     last_updated DATETIME NOT NULL,
     name VARCHAR(255) NOT NULL,
-    birth_date DATETIME NOT NULL,
+    birth_date DATE NOT NULL,
     country VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     identification_number VARCHAR(255),

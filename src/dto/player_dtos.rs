@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate};
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -8,7 +8,7 @@ pub struct PlayerForCreationDto {
     pub password: String,
     pub name: String,
     #[serde(rename = "birthDate")]
-    pub birth_date: NaiveDateTime,
+    pub birth_date: NaiveDate,
     pub country: String,
     pub city: String,
 }
@@ -16,7 +16,7 @@ pub struct PlayerForCreationDto {
 pub struct PlayerForUpdateDto {
     pub name: Option<String>,
     #[serde(rename = "birthDate")]
-    pub birth_date: Option<NaiveDateTime>,
+    pub birth_date: Option<NaiveDate>,
     pub country: Option<String>,
     pub city: Option<String>,
     #[serde(rename = "identificationNumber")]

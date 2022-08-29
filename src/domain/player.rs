@@ -1,15 +1,15 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{NaiveDateTime, Utc, NaiveDate};
 use serde::{Serialize, Deserialize};
 
 use crate::dto::player_dtos::PlayerForCreationDto;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Player {
     pub id: i32,
     pub time_created: NaiveDateTime,
     pub last_updated: NaiveDateTime,
     pub name: String,
-    pub birth_date: NaiveDateTime,
+    pub birth_date: NaiveDate,
     pub country: String,
     pub city: String,
     pub identification_number: Option<String>,
@@ -22,7 +22,7 @@ pub struct Player {
 
 impl Player{
     pub fn new() -> Player {
-        Player { id: -1, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), name: "".to_string(), birth_date: Utc::now().naive_utc(), country: "".to_string(), city: "".to_string(), identification_number: None, bio: None, profile_picture_url: None, id_verified: false, phone_number_verified: false }
+        Player { id: -1, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), name: "".to_string(), birth_date: Utc::now().date_naive(), country: "".to_string(), city: "".to_string(), identification_number: None, bio: None, profile_picture_url: None, id_verified: false, phone_number_verified: false }
     }
     pub fn new_from_creation_dto(player_dto: &PlayerForCreationDto, id: &i32) -> Player {
         Player {  id: *id, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), name: player_dto.name.clone(), birth_date: player_dto.birth_date.clone(), country: player_dto.country.clone(), city: player_dto.city.clone(), identification_number: None, bio: None, profile_picture_url: None, id_verified: false, phone_number_verified: false }
