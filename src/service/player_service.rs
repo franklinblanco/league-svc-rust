@@ -5,7 +5,7 @@ use dev_dtos::{domain::user::{credential_type::CredentialType, token::Token}, dt
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{dto::player_dtos::{PlayerForCreationDto, PlayerForUpdateDto}, util::{env_util::APP_NAME, error_util::{handle_status_code_error_only, handle_database_error}, converter}, dao::player_dao, domain::player::Player};
+use crate::{dto::player_dtos::{PlayerForCreationDto, PlayerForUpdateDto}, util::{env_util::APP_NAME, error_util::{handle_database_error}, converter, macros::macros}, dao::player_dao, domain::player::Player};
 
 
 pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: PlayerForCreationDto) -> TypedHttpResponse<Token> {
@@ -17,10 +17,7 @@ pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: Pl
         name: player.name.clone()
     };
 
-    let persisted_token = match create_user(client, &user_for_creation).await {
-        Ok(user) => user,
-        Err(err) => { return handle_status_code_error_only(err) },
-    };
+    let persisted_token = macros::unwrap_or_return_handled_error!(create_user(client, &user_for_creation).await);
 
     match player_dao::insert_player(conn, Player::new_from_creation_dto(&player, &persisted_token.user_id)).await {
         Ok(_) => TypedHttpResponse::return_standard_response(StatusCode::OK, persisted_token),
@@ -29,10 +26,7 @@ pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: Pl
 }
 
 pub async fn edit_player_profile(conn: &MySqlPool, client: &Client, player: PlayerForUpdateDto) -> TypedHttpResponse<Player> {
-    let persisted_user = match user_service::authenticate_user_with_token(client, &UserForAuthenticationDto { app: APP_NAME.to_string(), id: player.user_id.to_string(), token: player.auth_token.clone() }).await {
-        Ok(user) => user,
-        Err(err) => return handle_status_code_error_only(err)
-    };
+    let persisted_user = macros::unwrap_or_return_handled_error!(user_service::authenticate_user_with_token(client, &UserForAuthenticationDto { app: APP_NAME.to_string(), id: player.user_id.to_string(), token: player.auth_token.clone() }).await);
     //  Attempt to find player in database with the user id that user service gave back.
     let persisted_player = match player_dao::get_player_with_id(conn, persisted_user.id).await {
         Ok(result) => match result {

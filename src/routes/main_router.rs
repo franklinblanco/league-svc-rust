@@ -3,7 +3,7 @@ use actix_web::{HttpServer, App, web};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use super::player_routes::create_player_profile;
+use super::player_routes::{create_player_profile, edit_player_profile};
 //use crate::r#do::shared_state::SharedStateObj;
 
 //  This function is to be used in case code is meant to be run after server startup
@@ -40,7 +40,9 @@ pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPo
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
             .app_data(client_state.clone())
-            .service(web::scope("/").service(create_player_profile))
+            .service(web::scope("/")
+                .service(create_player_profile)
+                .service(edit_player_profile))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?
