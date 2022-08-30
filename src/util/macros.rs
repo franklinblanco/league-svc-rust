@@ -4,6 +4,14 @@ pub mod macros {
     /// Give it a Result<Whatever_you_want_to_return, Error> and it'll
     /// Basically unwrap the result if its there and if it isn't it'll return an error.
     /// No need for repetitive match statements!
+    /// ```
+    /// # use actix_web::{http::StatusCode};
+    /// use dev_dtos::enums::error::Error;
+    /// fn function_to_run() -> Result<String, Error> {
+    ///     Ok(String::from("Success!"))
+    /// }
+    /// assert_eq!(unwrap_or_return_handled_error!(function_to_run()), String::from("Success!"));
+    /// ```
     macro_rules! unwrap_or_return_handled_error {
         ( $e:expr ) => {
             match $e {
