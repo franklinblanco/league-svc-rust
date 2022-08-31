@@ -1,5 +1,8 @@
 use chrono::{NaiveDate};
+use dev_dtos::{dtos::user::user_dtos::UserForCreationDto, domain::user::credential_type::CredentialType};
 use serde::{Serialize, Deserialize};
+
+use crate::util::env_util::APP_NAME;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerForCreationDto {
@@ -28,4 +31,10 @@ pub struct PlayerForUpdateDto {
     pub user_id: i32,
     #[serde(rename = "authToken")]
     pub auth_token: String,
+}
+
+impl PlayerForCreationDto {
+    pub fn convert_player_into_user_for_creation(player: &PlayerForCreationDto) -> UserForCreationDto{
+        UserForCreationDto { app: APP_NAME.to_owned(), credential: player.phone_number.clone(), credential_type: CredentialType::PhoneNumber, password: player.password.clone(), name: player.name.clone() }
+    }
 }
