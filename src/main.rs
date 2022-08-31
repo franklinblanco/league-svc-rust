@@ -4,9 +4,9 @@ use util::env_util;
 
 #[forbid(unsafe_code)]
 
+pub mod util;
 pub mod dao;
 pub mod routes;
-pub mod util;
 pub mod domain;
 pub mod dto;
 pub mod service;
