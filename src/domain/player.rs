@@ -1,7 +1,7 @@
 use chrono::{NaiveDateTime, Utc, NaiveDate};
 use serde::{Serialize, Deserialize};
 
-use crate::dto::player_dtos::PlayerForCreationDto;
+use crate::dto::player::PlayerForCreationDto;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Player {

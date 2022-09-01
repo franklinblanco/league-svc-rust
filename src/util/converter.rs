@@ -1,6 +1,6 @@
 use actix_web_utils::dtos::message::MessageResource;
 
-use crate::{dto::player_dtos::PlayerForUpdateDto, domain::player::Player, validation::player::player_validatior::{validate_name, validate_bio, validate_profile_picture_url, validate_birth_date, validate_country, validate_identification_number, validate_city}};
+use crate::{dto::player::PlayerForUpdateDto, domain::player::Player, validation::player::player_validatior::{validate_name, validate_bio, validate_profile_picture_url, validate_birth_date, validate_country, validate_identification_number, validate_city}};
 
 
 /// Checks for all the fields inside the PlayerForUpdateDto to see if any where recieved. Then if it finds any, it sends that to the 

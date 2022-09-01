@@ -1,5 +1,4 @@
 use dao::main_dao::{self, run_all_migrations};
-use routes::main_router::after_startup_fn;
 use util::env_util;
 
 #[forbid(unsafe_code)]
@@ -27,5 +26,5 @@ async fn main() {
     run_all_migrations(&mut db_conn).await;
 
     //  Pass shared state to server and start it
-    routes::main_router::start_all_routes(&after_startup_fn, db_conn, env_vars).await.unwrap();
+    routes::main_router::start_all_routes(db_conn, env_vars).await.unwrap();
 }

@@ -1,1 +1,2 @@
-pub mod player_dtos;
+pub mod player;
+pub mod league;

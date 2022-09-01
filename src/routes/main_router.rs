@@ -3,15 +3,15 @@ use actix_web::{HttpServer, App, web};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use super::player_routes::{create_player_profile, edit_player_profile};
+use super::player::{create_player_profile, edit_player_profile};
 //use crate::r#do::shared_state::SharedStateObj;
 
 //  This function is to be used in case code is meant to be run after server startup
-pub fn after_startup_fn() {
+pub async fn after_startup_fn() {
     println!("{}", "Started server.");
 }
 
-pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPool, env_vars: HashMap<String, String>)
+pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, String>)
 -> Result<(), std::io::Error>
 {
     //  Get env variables to build server address
@@ -50,6 +50,6 @@ pub async fn start_all_routes(after_startup_fn_call: &dyn Fn(), db_conn: MySqlPo
 
     //  Actual server start and after startup call
     let (server_start_result, _after_startup_value) = 
-    tokio::join!(server_future, async {after_startup_fn_call()});
+    tokio::join!(server_future, after_startup_fn());
     return server_start_result; //   Return server
 }
