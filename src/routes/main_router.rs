@@ -4,10 +4,11 @@ use reqwest::Client;
 use sqlx::MySqlPool;
 
 use super::player::{create_player_profile, edit_player_profile};
-//use crate::r#do::shared_state::SharedStateObj;
 
-//  This function is to be used in case code is meant to be run after server startup
+///  This function is to be used in case code is meant to be run after server startup
 pub async fn after_startup_fn() {
+    //TODO: Gather all startup duties. 
+    //TODO: Get all sports and store them in DB
     println!("{}", "Started server.");
 }
 
