@@ -1,5 +1,6 @@
+use chrono::Utc;
 use dao::main_dao::{self, run_all_migrations};
-use util::env_util;
+use util::{env_util};
 
 #[forbid(unsafe_code)]
 
@@ -13,6 +14,7 @@ pub mod validation;
 
 #[tokio::main]
 async fn main() {
+    let start_time = Utc::now().timestamp_millis();
     //  Retrieve env variables and send to services that need them.
     let env_vars = env_util::get_dot_env_map();
     
@@ -26,5 +28,5 @@ async fn main() {
     run_all_migrations(&mut db_conn).await;
 
     //  Pass shared state to server and start it
-    routes::main_router::start_all_routes(db_conn, env_vars).await.unwrap();
+    routes::main_router::start_all_routes(db_conn, env_vars, start_time).await.unwrap();
 }

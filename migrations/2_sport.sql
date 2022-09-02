@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS sport (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     category_id INT NOT NULL
 );

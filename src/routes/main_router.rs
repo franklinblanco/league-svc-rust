@@ -1,18 +1,22 @@
 use std::{sync::{Arc}, collections::HashMap};
 use actix_web::{HttpServer, App, web};
+use chrono::Utc;
 use reqwest::Client;
 use sqlx::MySqlPool;
+
+use crate::service::sport_service;
 
 use super::player::{create_player_profile, edit_player_profile};
 
 ///  This function is to be used in case code is meant to be run after server startup
-pub async fn after_startup_fn() {
-    //TODO: Gather all startup duties. 
-    //TODO: Get all sports and store them in DB
-    println!("{}", "Started server.");
+pub async fn after_startup_fn(conn: &MySqlPool, start_time: i64) {
+    sport_service::insert_all_sports_from_list(conn).await;
+    println!("{}", "Finished db updates!");
+    println!("{}", "Started server with no errors!");
+    println!("Server took {}ms to start", Utc::now().timestamp_millis() - start_time);
 }
 
-pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, String>)
+pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, String>, start_time: i64)
 -> Result<(), std::io::Error>
 {
     //  Get env variables to build server address
@@ -31,7 +35,7 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
     };
 
     //  Extract variables to be put into shared app state & clone them
-    let db_conn_state = web::Data::new(Arc::new(db_conn));
+    let db_conn_state = web::Data::new(Arc::new(db_conn.clone()));
     let env_vars_state = web::Data::new(Arc::new(env_vars.clone()));
     let client_state = web::Data::new(Arc::new(Client::new()));
     //  Start server code that turns into a future to be executed below
@@ -51,6 +55,6 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
 
     //  Actual server start and after startup call
     let (server_start_result, _after_startup_value) = 
-    tokio::join!(server_future, after_startup_fn());
+    tokio::join!(server_future, after_startup_fn(&db_conn, start_time));
     return server_start_result; //   Return server
 }
