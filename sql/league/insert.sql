@@ -2,6 +2,7 @@ INSERT INTO league (
     id,
     owner_id,
     sport_id,
+    place_id,
     time_created,
     last_updated,
     state,
@@ -13,6 +14,7 @@ INSERT INTO league (
     description
 ) VALUES(
     NULL,
+    ?,
     ?,
     ?,
     NOW(),

@@ -15,6 +15,7 @@ pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: Pl
     unwrap_or_return_handled_error!(500, player_dao::insert_player(conn, player_to_persist).await, Token);
     TypedHttpResponse::return_standard_response(200, persisted_token)
 }
+//TODO: Sign in & forgot password?
 
 /// Called to update any detail in the player profile
 pub async fn edit_player_profile(conn: &MySqlPool, client: &Client, player: PlayerForUpdateDto) -> TypedHttpResponse<Player> {

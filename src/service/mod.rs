@@ -1,3 +1,3 @@
-pub mod league_service;
-pub mod player_service;
-pub mod sport_service;
+pub mod league;
+pub mod player;
+pub mod sport;

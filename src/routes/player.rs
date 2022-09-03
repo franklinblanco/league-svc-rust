@@ -6,14 +6,14 @@ use actix_web::{post, web::{Json, self}, put};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{dto::player::{PlayerForCreationDto, PlayerForUpdateDto}, service::player_service, domain::player::Player};
+use crate::{dto::player::{PlayerForCreationDto, PlayerForUpdateDto}, service::player, domain::player::Player};
 
 #[post("/player")]
 pub async fn create_player_profile(db_conn: web::Data<Arc<MySqlPool>>, client: web::Data<Arc<Client>>, player: Json<PlayerForCreationDto>) -> TypedHttpResponse<Token> {
-    player_service::create_player_profile(&db_conn, &client, player.0).await
+    player::create_player_profile(&db_conn, &client, player.0).await
 }
 #[put("/player")]
 pub async fn edit_player_profile(db_conn: web::Data<Arc<MySqlPool>>, client: web::Data<Arc<Client>>, player: Json<PlayerForUpdateDto>) -> TypedHttpResponse<Player> {
-    player_service::edit_player_profile(&db_conn, &client, player.0).await
+    player::edit_player_profile(&db_conn, &client, player.0).await
 }
 

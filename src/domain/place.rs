@@ -8,13 +8,16 @@ pub struct Place{
     pub last_updated: NaiveDateTime,
     pub name: String,
     pub sport_id: i32,
-    pub address: Option<String>,
+    pub country: String,
+    pub state: Option<String>,
+    pub city: String,
+    pub address: String,
     pub maps_url: Option<String>,
     pub contact_number: Option<String>,
     pub picture_url: Option<String>
 }
 impl Place {
     pub fn new() -> Place{
-        Place { id: -1, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), name: "".to_string(), sport_id: -1, address: None, maps_url: None, contact_number: None, picture_url: None }
+        Place { id: -1, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), name: "".to_string(), sport_id: -1, country: "".to_string(), state: None, city: "".to_string(), address: "".to_string(), maps_url: None, contact_number: None, picture_url: None }
     }
 }

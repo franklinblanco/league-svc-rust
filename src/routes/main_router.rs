@@ -4,13 +4,14 @@ use chrono::Utc;
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::service::sport_service;
+use crate::service::sport::insert_all_sports_from_list;
 
-use super::player::{create_player_profile, edit_player_profile};
+use super::{player, sport, league};
+
 
 ///  This function is to be used in case code is meant to be run after server startup
 pub async fn after_startup_fn(conn: &MySqlPool, start_time: i64) {
-    sport_service::insert_all_sports_from_list(conn).await;
+    insert_all_sports_from_list(conn).await;
     println!("{}", "Finished db updates!");
     println!("{}", "Started server with no errors!");
     println!("Server took {}ms to start", Utc::now().timestamp_millis() - start_time);
@@ -45,9 +46,17 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
             .app_data(client_state.clone())
-            .service(web::scope("/")
-                .service(create_player_profile)
-                .service(edit_player_profile))
+            .service(web::scope("/player")
+                .service(player::create_player_profile)
+                .service(player::edit_player_profile))
+
+            .service(web::scope("/league")
+                .service(league::create_league)
+                .service(league::get_open_leagues_in_my_area)
+                .service(league::get_specific_league))
+
+            .service(web::scope("/sport")
+                .service(sport::get_all_sports))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?
