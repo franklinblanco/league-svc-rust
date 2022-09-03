@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use actix_web::{HttpResponse, post, get, web::{self, Data, Json}};
+use actix_web::{HttpResponse, post, get, web::{self, Data, Json, Path}};
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
@@ -13,9 +13,9 @@ pub async fn create_league(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>
     league::create_league(&conn, &client, league.0).await
 }
 
-#[get("/nearme")]
-pub async fn get_open_leagues_in_my_area(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>) -> TypedHttpResponse<Vec<League>> { // frontend should hit another endpoint if the user isn't registered
-    league::get_open_leagues_in_my_area(&conn, &client, user.0).await
+#[get("/nearme/{page}")]
+pub async fn get_open_leagues_in_my_area(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, page: Path<i32>) -> TypedHttpResponse<Vec<League>> { // frontend should hit another endpoint if the user isn't registered
+    league::get_open_leagues_in_my_area(&conn, &client, user.0, *page).await
 }
 
 #[get("/{league_id}")]

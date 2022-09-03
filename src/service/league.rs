@@ -4,7 +4,7 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{domain::league::League, dto::league::LeagueForCreationDto, util::env_util::APP_NAME, dao::{player_dao::{get_player_with_id}, league_dao::{insert_league, get_league_with_id},}};
+use crate::{domain::league::League, dto::league::LeagueForCreationDto, util::env_util::APP_NAME, dao::{player_dao::{get_player_with_id}, league_dao::{insert_league, get_league_with_id, get_leagues_by_country_limited_to},}};
 
 /// Create a league.
 pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForCreationDto) -> TypedHttpResponse<League> {
@@ -38,7 +38,7 @@ pub async fn get_league(conn: &MySqlPool, id: i32) -> TypedHttpResponse<League> 
 }
 
 /// This route infers the player's area by his country & city.
-pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, page: i32) -> TypedHttpResponse<Vec<League>> {
     let user = unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -48,6 +48,9 @@ pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
-
-    TypedHttpResponse::return_empty_response(200)
+    // Code to get the fromRow and the ToRow numbers out of a single page number
+    let from_row = (page * 20) - 20;
+    let to_row = page * 20;
+    let res = get_leagues_by_country_limited_to(conn, player.country, from_row, to_row).await;
+    unwrap_or_return_handled_error!(404, 200, res, Vec<League>)
 }
