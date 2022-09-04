@@ -8,7 +8,7 @@ pub async fn insert_league_player(conn: &MySqlPool, league_player: &LeaguePlayer
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/league_player/insert.sql", league_player.league_id, league_player.player_id, league_player.status).execute(conn).await)
 }
 
-pub async fn update_league_player_status(conn: &MySqlPool, id: i32, status: LeaguePlayerStatus) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
+pub async fn update_league_player_status(conn: &MySqlPool, id: i32, status: &LeaguePlayerStatus) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/league_player/update.sql", status.to_string(), id).execute(conn).await)
 }
 

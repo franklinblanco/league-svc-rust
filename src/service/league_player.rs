@@ -54,6 +54,30 @@ pub async fn get_league_request_status(conn: &MySqlPool, client: &Client, join_r
 
 
 
+pub async fn change_league_request_status(conn: &MySqlPool, client: &Client, new_status: LeaguePlayerStatus, join_req: JoinRequest) -> TypedHttpResponse<LeaguePlayer> {
+    let league = match unwrap_or_return_handled_error!(league_dao::get_league_with_id(conn, join_req.league_id).await, LeaguePlayer) {
+        Some(league) => league,
+        None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("League not found with given id.")),
+    };
+    let user_for_auth = UserForAuthenticationDto { app: APP_NAME.to_owned(), id: join_req.user_id.to_string(), token: join_req.auth_token.clone()};
+    let user = unwrap_or_return_handled_error!(
+        401,
+        authenticate_user_with_token(client, &user_for_auth).await,
+        LeaguePlayer
+    );
+    if league.owner_id != user.id {
+        return TypedHttpResponse::return_standard_error(401, MessageResource::new_from_str("You don't own this league..."))
+    }
+    let mut persisted_league_player = match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, join_req.user_id).await, LeaguePlayer).get(0) {
+        Some(league_player) => league_player.clone(),
+        None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("LeaguePlayer not found with given ids.")),
+    };
+    unwrap_or_return_handled_error!(league_player_dao::update_league_player_status(conn, user.id, &new_status).await, LeaguePlayer);
+    persisted_league_player.status = new_status.to_string();
+    TypedHttpResponse::return_standard_response(200, persisted_league_player)
+}
+
+
 pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, client: &Client, join_req: JoinRequest) -> TypedHttpResponse<Vec<League>> {
     let user_for_auth = UserForAuthenticationDto { app: APP_NAME.to_owned(), id: join_req.user_id.to_string(), token: join_req.auth_token.clone()};
     unwrap_or_return_handled_error!(

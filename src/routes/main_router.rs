@@ -67,7 +67,8 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
                 .service(league_player::get_all_leagues_player_has_applied_to)
                 .service(league_player::get_all_players_in_league)
                 .service(league_player::get_league_request_status)
-                .service(league_player::request_to_join_league))
+                .service(league_player::request_to_join_league)
+                .service(league_player::change_league_request_status))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?
