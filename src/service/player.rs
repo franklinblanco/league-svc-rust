@@ -1,6 +1,6 @@
 use actix_web_utils::{extensions::typed_response::TypedHttpResponse, dtos::message::MessageResource, unwrap_or_return_handled_error};
 use dev_communicators::middleware::{user_svc::user_service::{create_user, self}};
-use dev_dtos::{domain::user::{token::Token}, dtos::user::user_dtos::{UserForAuthenticationDto}};
+use dev_dtos::{domain::user::{token::Token}, dtos::user::user_dtos::{UserForAuthenticationDto, UserForLoginDto}};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
@@ -31,6 +31,12 @@ pub async fn edit_player_profile(conn: &MySqlPool, client: &Client, player: Play
     return TypedHttpResponse::return_empty_response(200);
 }
 //TODO: Verify user
-pub async fn _fun() -> TypedHttpResponse<>{
-    todo!()
+pub async fn login(conn: &MySqlPool, client: &Client, mut user: UserForLoginDto) -> TypedHttpResponse<Player> {
+    user.app = APP_NAME.to_string();
+    let persisted_user = unwrap_or_return_handled_error!(user_service::authenticate_user_with_password(client, &user).await, Player);
+
+    match unwrap_or_return_handled_error!(player_dao::get_player_with_id(conn, persisted_user.id).await, Player) {
+        Some(found_player) => TypedHttpResponse::return_standard_response(200, found_player.clear_all_sensitive_fields()),
+        None => TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Could not find player with id. Something went wrong.")),
+    }
 }
