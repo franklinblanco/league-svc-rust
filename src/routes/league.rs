@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use actix_web::{HttpResponse, post, get, web::{self, Data, Json, Path}};
+use actix_web::{post, get, web::{self, Data, Json, Path}};
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
@@ -18,17 +18,22 @@ pub async fn get_open_leagues_in_my_area(conn: Data<Arc<MySqlPool>>, client: Dat
     league::get_open_leagues_in_my_area(&conn, &client, user.0, *page).await
 }
 
+#[get("/country/{country}/{page}")]
+pub async fn get_leagues_in_country(conn: Data<Arc<MySqlPool>>, path_args: Path<(String, i32)>) -> TypedHttpResponse<Vec<League>> { // frontend should hit another endpoint if the user isn't registered
+    league::get_leagues_in_country(&conn, &path_args.0, path_args.1).await
+}
+
 #[get("/{league_id}")]
 pub async fn get_specific_league(conn: Data<Arc<MySqlPool>>, league_id: web::Path<i32>) -> TypedHttpResponse<League> {
     league::get_league(&conn, *league_id).await
 }
 
-#[get("/player/{player_id}")]
-pub async fn get_leagues_hosted_by_player(_player_id: web::Path<i32>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+#[post("/player/{player_id}/{page}")]
+pub async fn get_leagues_hosted_by_player(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, path_args: web::Path<(i32, i32)>) -> TypedHttpResponse<Vec<League>> {
+    league::get_leagues_hosted_by_player(&conn, &client, user.0, path_args.0, path_args.1).await
 }
 
-#[get("/place/{place_id}")]
-pub async fn get_leagues_in_place(_place_id: web::Path<i32>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+#[get("/place/{place_id}/{page}")]
+pub async fn get_leagues_in_place(conn: Data<Arc<MySqlPool>>, path_args: web::Path<(i32, i32)>) -> TypedHttpResponse<Vec<League>> {
+    league::get_leagues_in_place(&conn, path_args.0, path_args.1).await
 }

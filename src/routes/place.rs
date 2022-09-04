@@ -6,7 +6,7 @@ use crate::domain::place::Place;
 
 
 #[get("/country/{country}")]
-pub async fn get_places_for_country(_country: Path<String>) -> TypedHttpResponse<Vec<Place>> {
+pub async fn get_places_for_country_paged(_country: Path<String>, ) -> TypedHttpResponse<Vec<Place>> {
     todo!()
 }
 

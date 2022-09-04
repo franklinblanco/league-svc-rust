@@ -78,14 +78,16 @@ pub async fn change_league_request_status(conn: &MySqlPool, client: &Client, new
 }
 
 
-pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, client: &Client, join_req: JoinRequest) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, client: &Client, join_req: JoinRequest, page: i32) -> TypedHttpResponse<Vec<League>> {
     let user_for_auth = UserForAuthenticationDto { app: APP_NAME.to_owned(), id: join_req.user_id.to_string(), token: join_req.auth_token.clone()};
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<League>
     );
-    let resulting_leagues = unwrap_or_return_handled_error!(league_dao::get_all_leagues_player_has_applied_to(conn, join_req.user_id).await, Vec<League>);
+    let from_row = (page * 20) - 20;
+    let to_row = page * 20;
+    let resulting_leagues = unwrap_or_return_handled_error!(league_dao::get_all_leagues_player_has_applied_to(conn, join_req.user_id, from_row, to_row).await, Vec<League>);
     if resulting_leagues.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, resulting_leagues);
     }

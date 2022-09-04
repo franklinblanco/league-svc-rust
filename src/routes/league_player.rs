@@ -20,8 +20,8 @@ pub async fn change_league_request_status(conn: Data<Arc<MySqlPool>>, client: Da
     league_player::change_league_request_status(&conn, &client, new_status.to_owned(), join_req.0).await
 }
 #[post("/leagues")]
-pub async fn get_all_leagues_player_has_applied_to(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, join_req: Json<JoinRequest>) -> TypedHttpResponse<Vec<League>> {
-    league_player::get_all_leagues_player_has_applied_to(&conn, &client, join_req.0).await
+pub async fn get_all_leagues_player_has_applied_to(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, join_req: Json<JoinRequest>, page: Path<i32>) -> TypedHttpResponse<Vec<League>> {
+    league_player::get_all_leagues_player_has_applied_to(&conn, &client, join_req.0, *page).await
 }
 #[post("/players")]
 pub async fn get_all_players_in_league(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, join_req: Json<JoinRequest>) -> TypedHttpResponse<Vec<Player>> {

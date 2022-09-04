@@ -53,13 +53,16 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
             .service(web::scope("/league")
                 .service(league::create_league)
                 .service(league::get_open_leagues_in_my_area)
-                .service(league::get_specific_league))
+                .service(league::get_specific_league)
+                .service(league::get_leagues_in_country)
+                .service(league::get_leagues_hosted_by_player)
+                .service(league::get_leagues_in_place))
 
             .service(web::scope("/sport")
                 .service(sport::get_all_sports))
 
             .service(web::scope("/place")
-                .service(place::get_places_for_country)
+                .service(place::get_places_for_country_paged)
                 .service(place::get_places_for_sport)
                 .service(place::get_places_near_me))
 
