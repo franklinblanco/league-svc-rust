@@ -6,7 +6,7 @@ use sqlx::MySqlPool;
 
 use crate::service::sport::insert_all_sports_from_list;
 
-use super::{player, sport, league, place};
+use super::{player, sport, league, place, league_player};
 
 
 ///  This function is to be used in case code is meant to be run after server startup
@@ -62,6 +62,12 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
                 .service(place::get_places_for_country)
                 .service(place::get_places_for_sport)
                 .service(place::get_places_near_me))
+
+            .service(web::scope("/league_player")
+                .service(league_player::get_all_leagues_player_has_applied_to)
+                .service(league_player::get_all_players_in_league)
+                .service(league_player::get_league_request_status)
+                .service(league_player::request_to_join_league))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?

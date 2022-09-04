@@ -23,3 +23,7 @@ pub async fn get_league_players_by_league_id(conn: &MySqlPool, league_id: i32,) 
 pub async fn get_league_players_by_player_id(conn: &MySqlPool, player_id: i32,) -> Result<Vec<LeaguePlayer>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(sqlx::query_file_as!(LeaguePlayer, "sql/league_player/get_by_player.sql", player_id).fetch_all(conn).await)
 }
+
+pub async fn get_league_players_by_player_id_and_league_id(conn: &MySqlPool, league_id: i32, player_id: i32) -> Result<Vec<LeaguePlayer>, GenericError<sqlx::Error>> {
+    wrap_generic_error_in_wrapper!(sqlx::query_file_as!(LeaguePlayer, "sql/league_player/get_by_league_and_player.sql", league_id, player_id).fetch_all(conn).await)
+}

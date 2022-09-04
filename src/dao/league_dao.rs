@@ -18,3 +18,7 @@ pub async fn get_leagues_by_country_limited_to(conn: &MySqlPool, country: String
 pub async fn update_league_with_id(conn: &MySqlPool, league: League) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/league/update.sql", league.owner_id, league.sport_id, league.place_id, league.state, league.visibility, league.date_and_time, league.cost_to_join, league.currency, league.max_players, league.description, league.id).execute(conn).await)
 }
+
+pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, player_id: i32) -> Result<Vec<League>, GenericError<sqlx::Error>> {
+    wrap_generic_error_in_wrapper!(sqlx::query_file_as!(League, "sql/league/get_by_league_player.sql", player_id).fetch_all(conn).await)
+}
