@@ -1,21 +1,25 @@
-use actix_web::{get, post, web::{Path, Json}};
+use std::sync::Arc;
+
+use actix_web::{get, post, web::{Path, Json, Data}};
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
+use reqwest::Client;
+use sqlx::MySqlPool;
 
-use crate::domain::place::Place;
+use crate::{domain::place::Place, service::place};
 
 
-#[get("/country/{country}")]
-pub async fn get_places_for_country_paged(_country: Path<String>, ) -> TypedHttpResponse<Vec<Place>> {
-    todo!()
+#[get("/country/{country}/page/{page}")]
+pub async fn get_places_for_country_paged(conn: Data<Arc<MySqlPool>>, path_args: Path<(String, i32)> ) -> TypedHttpResponse<Vec<Place>> {
+    place::get_places_for_country_paged(&conn, path_args.0.clone(), path_args.1).await
 }
 
-#[get("/sport/{sport_id}")]
-pub async fn get_places_for_sport(_sport_id: Path<i32>) -> TypedHttpResponse<Vec<Place>> {
-    todo!()
+#[get("/sport/{sport_id}/page/{page}")]
+pub async fn get_places_for_sport(conn: Data<Arc<MySqlPool>>, path_args: Path<(i32, i32)>) -> TypedHttpResponse<Vec<Place>> {
+    place::get_places_for_sport(&conn, path_args.0, path_args.1).await
 }
 
-#[post("/nearme")]
-pub async fn get_places_near_me(_user: Json<UserForAuthenticationDto>) -> TypedHttpResponse<Vec<Place>> {
-    todo!()
+#[post("/nearme/{page}")]
+pub async fn get_places_near_me(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, page: Path<i32>) -> TypedHttpResponse<Vec<Place>> {
+    place::get_places_near_me(&conn, &client, user.0, *page).await
 }
