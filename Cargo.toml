@@ -9,6 +9,7 @@ edition = "2021"
 tokio = { version = "1.20.1", features = ["full"] }
 dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1" }
 sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal" ] }
 actix-web = "4"
 actix-web-utils = "0.2"

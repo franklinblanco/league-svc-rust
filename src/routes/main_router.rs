@@ -4,7 +4,7 @@ use chrono::Utc;
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::service::sport::insert_all_sports_from_list;
+use crate::service::{sport::insert_all_sports_from_list, place::insert_all_places_from_list};
 
 use super::{player, sport, league, place, league_player, trust};
 
@@ -12,6 +12,7 @@ use super::{player, sport, league, place, league_player, trust};
 ///  This function is to be used in case code is meant to be run after server startup
 pub async fn after_startup_fn(conn: &MySqlPool, start_time: i64) {
     insert_all_sports_from_list(conn).await;
+    insert_all_places_from_list(conn).await;
     println!("{}", "Finished db updates!");
     println!("{}", "Started server with no errors!");
     println!("Server took {}ms to start", Utc::now().timestamp_millis() - start_time);

@@ -54,3 +54,40 @@ pub async fn get_places_near_me(conn: &MySqlPool, client: &Client, mut user_for_
     TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("No places found for your country."))
 
 }
+
+
+pub async fn insert_all_places_from_list(conn: &MySqlPool) {
+    let all_places_persisted = match place_dao::get_all_places(conn).await {
+        Ok(places) => places,
+        Err(e) => panic!("{}", e.error.to_string()),
+    };
+    let all_places: Vec<Place> = match serde_json::from_str(include_str!("../../places.json")) {
+        Ok(res) => match res {serde_json::Value::Array(arr) => arr.into_iter().map(|val|
+            {
+                let mut place = Place::new();
+                place.name = val.get("name").unwrap().as_str().unwrap().to_string();
+                place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as i32;
+                place.country = val.get("country").unwrap().as_str().unwrap().to_string();
+                place.state = Some(val.get("state").unwrap().as_str().unwrap().to_string());
+                place.city = val.get("city").unwrap().as_str().unwrap().to_string();
+                place.address = val.get("address").unwrap().as_str().unwrap().to_string();
+                place.maps_url = Some(val.get("maps_url").unwrap().as_str().unwrap().to_string());
+                place.contact_number = Some(val.get("contact_number").unwrap().as_str().unwrap().to_string());
+                place.picture_url = None;
+                place
+            }
+        ).collect(),
+        _ => panic!("No places found in places.json. Is this missing or what?"),
+    },
+        Err(e) => panic!("{}", e.to_string()),
+    };
+    if all_places_persisted.len() == all_places.len() {
+        return;
+    }
+    for place in all_places {
+        match place_dao::insert_place(conn, place).await {
+            Ok(_) => {},
+            Err(e) => panic!("{}", e.error.to_string())
+        }
+    }
+}

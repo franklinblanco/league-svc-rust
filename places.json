@@ -1,0 +1,90 @@
+[
+    {
+        "name": "Brazuka cancha sintética",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Av. Winston Churchill, Santo Domingo 11005",
+        "maps_url": "https://g.page/brazucacf?share",
+        "contact_number": "8498500456",
+        "picture_url": ""
+    },
+    {
+        "name": "Soccertown",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Av 27 de Febrero 532, Santo Domingo",
+        "maps_url": "https://goo.gl/maps/n2hYFStabVMDQp8Z9",
+        "contact_number": "8096201169",
+        "picture_url": ""
+    },
+    {
+        "name": "Open Fitness Cancha de Futbol",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Av. Máximo Gómez esq, Santo Domingo 10203",
+        "maps_url": "https://goo.gl/maps/N9dCCaZQv1sWA64H8",
+        "contact_number": "8098511047",
+        "picture_url": ""
+    },
+    {
+        "name": "Santa Fé Futbol club",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Av. Dr. Bernardo Correa y Cidrón Esq, Santo Domingo 00001",
+        "maps_url": "https://goo.gl/maps/6xPnN47mCm5QDFs37",
+        "contact_number": "8095320900",
+        "picture_url": ""
+    },
+    {
+        "name": "La Media Cancha",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "La Nueva Media Cancha, C. Primera, Santo Domingo",
+        "maps_url": "https://goo.gl/maps/ScxQkTrcYdZzAYe47",
+        "contact_number": "8097945802",
+        "picture_url": ""
+    },
+    {
+        "name": "Cancha de Fútbol ODEBRECHT",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Prof Juan Bosh L1, Santo Domingo 10122",
+        "maps_url": "https://goo.gl/maps/Cn5ePSjyCqx5Y8Cd6",
+        "contact_number": "",
+        "picture_url": ""
+    },
+    {
+        "name": "Corner kick",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Anacaona esquina, Las Ninfas, Santo Domingo 10111",
+        "maps_url": "https://g.page/cornerkickrd?share",
+        "contact_number": "8095674781",
+        "picture_url": ""
+    },
+    {
+        "name": "Saint Joseph's Field",
+        "sport_id": 29,
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "city" : "Santo Domingo",
+        "address": "Av. Pedro Henríquez Ureña 95, Santo Domingo 10106",
+        "maps_url": "https://goo.gl/maps/X9mP8iwGZruo39Pu6",
+        "contact_number": "8095408992",
+        "picture_url": ""
+    }
+]
