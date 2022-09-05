@@ -17,8 +17,8 @@ pub async fn edit_player_profile(db_conn: web::Data<Arc<MySqlPool>>, client: web
     player::edit_player_profile(&db_conn, &client, player.0).await
 }
 #[post("/login")]
-pub async fn login(_db_conn: web::Data<Arc<MySqlPool>>, _client: web::Data<Arc<Client>>, _user: Json<UserForLoginDto>) -> TypedHttpResponse<Player> {
-    todo!()
+pub async fn login(db_conn: web::Data<Arc<MySqlPool>>, client: web::Data<Arc<Client>>, user: Json<UserForLoginDto>) -> TypedHttpResponse<Token> {
+    player::login(&db_conn, &client, user.0).await
 }
 //TODO: Verify phone number (prefferably in user-svc)
 //TODO: Verify ID

@@ -30,13 +30,13 @@ pub async fn edit_player_profile(conn: &MySqlPool, client: &Client, player: Play
     //  Debating in between an empty response with an OK or a more elaborate response with the updated Player.
     return TypedHttpResponse::return_empty_response(200);
 }
-//TODO: Verify user
-pub async fn login(conn: &MySqlPool, client: &Client, mut user: UserForLoginDto) -> TypedHttpResponse<Player> {
+//TODO: Verify user phone number
+pub async fn login(conn: &MySqlPool, client: &Client, mut user: UserForLoginDto) -> TypedHttpResponse<Token> {
     user.app = APP_NAME.to_string();
-    let persisted_user = unwrap_or_return_handled_error!(user_service::authenticate_user_with_password(client, &user).await, Player);
+    let persisted_token = unwrap_or_return_handled_error!(user_service::authenticate_user_with_password(client, &user).await, Token);
 
-    match unwrap_or_return_handled_error!(player_dao::get_player_with_id(conn, persisted_user.id).await, Player) {
-        Some(found_player) => TypedHttpResponse::return_standard_response(200, found_player.clear_all_sensitive_fields()),
+    match unwrap_or_return_handled_error!(player_dao::get_player_with_id(conn, persisted_token.user_id).await, Token) {
+        Some(_) => TypedHttpResponse::return_standard_response(200, persisted_token),
         None => TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Could not find player with id. Something went wrong.")),
     }
 }
