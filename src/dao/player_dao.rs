@@ -18,3 +18,11 @@ pub async fn update_player_with_id(conn: &MySqlPool, player: Player) -> Result<M
 pub async fn get_all_players_in_league(conn: &MySqlPool, league_id: i32) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(sqlx::query_file_as!(Player, "sql/player/get_by_league_player.sql", league_id).fetch_all(conn).await)
 }
+
+pub async fn get_all_trusted_players(conn: &MySqlPool, player_id: i32) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
+    wrap_generic_error_in_wrapper!(sqlx::query_file_as!(Player, "sql/player/get_trusted_players_by_truster.sql", player_id).fetch_all(conn).await)
+}
+
+pub async fn get_all_players_that_trust_player(conn: &MySqlPool, player_id: i32) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
+    wrap_generic_error_in_wrapper!(sqlx::query_file_as!(Player, "sql/player/get_players_that_trust_trustee.sql", player_id).fetch_all(conn).await)
+}
