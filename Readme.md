@@ -22,6 +22,7 @@ FOCUS ON: Building a user base, the business will come once you are established 
 - [x] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
 - [ ] Place submission by users (non approved)
 - [ ] Forgor password? (in user-svc)
+- [ ] Create big dto containing League, place, and all players in league (plus queue (number of Unaccepted join requests)) and make an endpoint to retrieve this from the frontend
 
 ### Features not for pre-release 0.9
 - [ ] User blocking / blacklisting
