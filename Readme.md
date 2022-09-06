@@ -1,3 +1,4 @@
+# LaLiga backend monolith (league-svc)
 This project should have multiple things
 A player system -> linked to users in usersvc
 Leagues on any sports
@@ -18,8 +19,20 @@ FOCUS ON: Building a user base, the business will come once you are established 
 - [x] Check trust count from SELECT COUNT(*) script
 - [ ] Check for already existing player trust each time you create a new one
 - [ ] Add trusted player league join request functionality
-- [ ] Phone number validation
+- [ ] Phone number validation (user-svc)
 - [ ] Player fields validation 
-- [ ] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
+- [x] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
+- [ ] Place submission by users (non approved)
+- [ ] Forgor password? (in user-svc)
 
 ### Features not for pre-release 0.9
+- [ ] User blocking / blacklisting
+- [ ] Commending (Basically leaving reviews for players once you played with them)
+- [ ] Reputation system (no-shows/shows/no-pays)
+
+### Planned but far off features
+- [ ] Teams (you can join league as a team, display teams in your profile page, be in multiple teams)
+- [ ] Tournaments (made up of teams)
+- [ ] Paying places through you (Payment gateway?)
+- [ ] Advertisements for places (Have them pay for ranking)
+- [ ] Chats (Group & DM)
