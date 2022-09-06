@@ -15,7 +15,7 @@ Positive, negative reviews, no-shows, yes-shows
 - [x] Fix multiplication overflow panic on page sizes
 - [ ] Create deploy script
 - [x] Check trust count from SELECT COUNT(*) script
-- [ ] Check for already existing player trust each time you create a new one
+- [x] Check for already existing player trust each time you create a new one
 - [ ] Add trusted player league join request functionality
 - [ ] Phone number validation (user-svc)
 - [ ] Player fields validation 
