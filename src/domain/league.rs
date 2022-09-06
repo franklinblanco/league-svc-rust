@@ -10,10 +10,10 @@ use crate::dto::league::LeagueForCreationDto;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct League {
-    pub id: i32,
-    pub owner_id: i32,
-    pub sport_id: i32,
-    pub place_id: i32,
+    pub id: u32,
+    pub owner_id: u32,
+    pub sport_id: u32,
+    pub place_id: u32,
     pub time_created: NaiveDateTime,
     pub last_updated: NaiveDateTime,
     /// State as in: Is the league open or closed? Not the geographical sense.
@@ -27,13 +27,13 @@ pub struct League {
     /// This is a string because it's actually meaningless right now. 
     /// We're not taking payments so this doesn't matter, it's just what the user wants.
     pub currency: Option<String>,
-    pub max_players: i32,
+    pub max_players: u32,
     pub description: Option<String>
 }
 
 impl League {
     pub fn new() -> League {
-        League { id: 0, owner_id: -1, sport_id: -1, place_id: -1, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), state: "".to_string(), visibility: "".to_string(), date_and_time: Utc::now().naive_utc(), cost_to_join: Decimal::new(0, 0), currency: None, max_players: -1, description: None }
+        League { id: 0, owner_id: 0, sport_id: 0, place_id: 0, time_created: Utc::now().naive_utc(), last_updated: Utc::now().naive_utc(), state: "".to_string(), visibility: "".to_string(), date_and_time: Utc::now().naive_utc(), cost_to_join: Decimal::new(0, 0), currency: None, max_players: 0, description: None }
     }
     pub fn new_from_league_for_creation_dto(league_dto: LeagueForCreationDto) -> League {
         League { 

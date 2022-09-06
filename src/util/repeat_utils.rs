@@ -2,7 +2,7 @@
 // Here I'll have a lot of errors that repeat
 
 use actix_web_utils::{dtos::message::MessageResource};
-const PAGE_SIZE: u16 = 20;
+const PAGE_SIZE: u32 = 20;
 
 /// Get From row and To row for database operations that are paged. 
 /// ```
@@ -13,5 +13,5 @@ const PAGE_SIZE: u16 = 20;
 /// ```
 pub fn get_from_and_to_from_page(page: u16) -> Result<(u32, u32), MessageResource> {
     if page == 0 { return Err(MessageResource::new_from_str("Page number cannot be 0."))}
-    Ok((((page * PAGE_SIZE) - PAGE_SIZE).into(), (page * PAGE_SIZE).into()))
+    Ok(((((page) as u32 * PAGE_SIZE) - PAGE_SIZE as u32).into(), ((page) as u32 * PAGE_SIZE)))
 }

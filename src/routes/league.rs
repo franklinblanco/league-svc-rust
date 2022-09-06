@@ -24,16 +24,16 @@ pub async fn get_leagues_in_country(conn: Data<Arc<MySqlPool>>, path_args: Path<
 }
 
 #[get("/{league_id}")]
-pub async fn get_specific_league(conn: Data<Arc<MySqlPool>>, league_id: web::Path<i32>) -> TypedHttpResponse<League> {
+pub async fn get_specific_league(conn: Data<Arc<MySqlPool>>, league_id: web::Path<u32>) -> TypedHttpResponse<League> {
     league::get_league(&conn, *league_id).await
 }
 
 #[post("/player/{player_id}/{page}")]
-pub async fn get_leagues_hosted_by_player(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, path_args: web::Path<(i32, u16)>) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_leagues_hosted_by_player(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, path_args: web::Path<(u32, u16)>) -> TypedHttpResponse<Vec<League>> {
     league::get_leagues_hosted_by_player(&conn, &client, user.0, path_args.0, path_args.1).await
 }
 
 #[get("/place/{place_id}/{page}")]
-pub async fn get_leagues_in_place(conn: Data<Arc<MySqlPool>>, path_args: web::Path<(i32, u16)>) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_leagues_in_place(conn: Data<Arc<MySqlPool>>, path_args: web::Path<(u32, u16)>) -> TypedHttpResponse<Vec<League>> {
     league::get_leagues_in_place(&conn, path_args.0, path_args.1).await
 }

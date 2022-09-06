@@ -18,7 +18,7 @@ pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req:
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, LeaguePlayer) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, LeaguePlayer) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
@@ -33,7 +33,7 @@ pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req:
         LeagueVisibility::Unlisted => LeaguePlayerStatus::Denied,
     };
     league_player_to_insert.status = join_request_status.to_string();
-    let last_insert_id = unwrap_or_return_handled_error!(league_player_dao::insert_league_player(conn, &league_player_to_insert).await, LeaguePlayer).last_insert_id() as i32;
+    let last_insert_id = unwrap_or_return_handled_error!(league_player_dao::insert_league_player(conn, &league_player_to_insert).await, LeaguePlayer).last_insert_id() as u32;
     unwrap_or_return_handled_error!(500, 200, league_player_dao::get_league_player_by_id(conn, last_insert_id).await, LeaguePlayer);
 }
 
@@ -46,7 +46,7 @@ pub async fn get_league_request_status(conn: &MySqlPool, client: &Client, join_r
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
-    match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, user.id).await, LeaguePlayer).get(0) {
+    match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, user.id as u32).await, LeaguePlayer).get(0) {
         Some(league_player) => TypedHttpResponse::return_standard_response(200, league_player.clone()),
         None => TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("LeaguePlayer not found with given ids.")),
     }
@@ -66,7 +66,7 @@ pub async fn change_league_request_status(conn: &MySqlPool, client: &Client, new
         LeaguePlayer
     );
     //TODO: Validate prev and next status. E.G: Previous status is joined then next status can't be Denied, but can be Kicked.
-    if league.owner_id != user.id {
+    if league.owner_id != user.id as u32 {
         return TypedHttpResponse::return_standard_error(401, MessageResource::new_from_str("You don't own this league..."))
     }
     match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, join_req.user_id).await, LeaguePlayer).get(0) {

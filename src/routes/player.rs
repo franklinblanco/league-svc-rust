@@ -24,17 +24,17 @@ pub async fn login(db_conn: web::Data<Arc<MySqlPool>>, client: web::Data<Arc<Cli
 }
 
 #[get("/profile/{player_id}")]
-pub async fn get_player_profile(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<i32>) -> TypedHttpResponse<PlayerProfileDto> {
+pub async fn get_player_profile(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<u32>) -> TypedHttpResponse<PlayerProfileDto> {
     player::get_player_profile(&db_conn, *player_id).await
 }
 
 #[get("/trusted/{player_id}")]
-pub async fn get_player_trusted_list(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<i32>) -> TypedHttpResponse<Vec<Player>> {
+pub async fn get_player_trusted_list(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<u32>) -> TypedHttpResponse<Vec<Player>> {
     player::get_player_trusted_list(&db_conn, *player_id).await
 }
 
 #[get("/trusted_by/{player_id}")]
-pub async fn get_player_trusted_by_list(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<i32>) -> TypedHttpResponse<Vec<Player>> {
+pub async fn get_player_trusted_by_list(db_conn: web::Data<Arc<MySqlPool>>, player_id: Path<u32>) -> TypedHttpResponse<Vec<Player>> {
     player::get_player_trusted_by_list(&db_conn, *player_id).await
 }
 //TODO: Verify phone number (prefferably in user-svc)

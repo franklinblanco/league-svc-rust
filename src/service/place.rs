@@ -20,7 +20,7 @@ pub async fn get_places_for_country_paged(conn: &MySqlPool, country: String, pag
     TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("No places found for your country."))
 }
 
-pub async fn get_places_for_sport(conn: &MySqlPool, sport_id: i32, page: u16) -> TypedHttpResponse<Vec<Place>> {
+pub async fn get_places_for_sport(conn: &MySqlPool, sport_id: u32, page: u16) -> TypedHttpResponse<Vec<Place>> {
     let page_limits = match get_from_and_to_from_page(page) {
         Ok(res) => res,
         Err(message) => return TypedHttpResponse::return_standard_error(400, message),
@@ -41,7 +41,7 @@ pub async fn get_places_near_me(conn: &MySqlPool, client: &Client, mut user_for_
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<Place>
     );
-    let player = match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, Vec<Place>) {
+    let player = match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Vec<Place>) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
@@ -69,7 +69,7 @@ pub async fn insert_all_places_from_list(conn: &MySqlPool) {
             {
                 let mut place = Place::new();
                 place.name = val.get("name").unwrap().as_str().unwrap().to_string();
-                place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as i32;
+                place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as u32;
                 place.country = val.get("country").unwrap().as_str().unwrap().to_string();
                 place.state = Some(val.get("state").unwrap().as_str().unwrap().to_string());
                 place.city = val.get("city").unwrap().as_str().unwrap().to_string();

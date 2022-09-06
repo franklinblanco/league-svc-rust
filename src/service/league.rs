@@ -16,7 +16,7 @@ pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForC
         League
     );
 
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, League) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, League) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
@@ -25,14 +25,14 @@ pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForC
     // TODO: Validate user doesn't have more than 10 leagues open?
     let league_query_reuslt = unwrap_or_return_handled_error!(insert_league(conn, League::new_from_league_for_creation_dto(league)).await, League);
     
-    match unwrap_or_return_handled_error!(get_league_with_id(conn, league_query_reuslt.last_insert_id() as i32).await, League) {
+    match unwrap_or_return_handled_error!(get_league_with_id(conn, league_query_reuslt.last_insert_id() as u32).await, League) {
         Some(league) => TypedHttpResponse::return_standard_response(200, league),
         None => TypedHttpResponse::return_standard_error(500, MessageResource::new_from_str("League not found.")),
     }
 }
 
 /// Used to get a specific league
-pub async fn get_league(conn: &MySqlPool, id: i32) -> TypedHttpResponse<League> {
+pub async fn get_league(conn: &MySqlPool, id: u32) -> TypedHttpResponse<League> {
     match unwrap_or_return_handled_error!(get_league_with_id(conn, id).await, League) {
         Some(league) => TypedHttpResponse::return_standard_response(200, league),
         None => TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("League not found.")),
@@ -48,7 +48,7 @@ pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<League>
     );
-    let player = match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, Vec<League>) {
+    let player = match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Vec<League>) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
@@ -82,7 +82,7 @@ pub async fn get_leagues_in_country(conn: &MySqlPool, country: &String, page: u1
 
 
 /// This route is used to get leagues from a country
-pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: i32, page: u16,) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: u32, page: u16,) -> TypedHttpResponse<Vec<League>> {
     let page_limits = match get_from_and_to_from_page(page) {
         Ok(res) => res,
         Err(message) => return TypedHttpResponse::return_standard_error(400, message),
@@ -97,7 +97,7 @@ pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: i32, page: u16,) -
 
 
 /// Only shows non unlisted leagues //TODO: Make a new endpoint to get MyLeagues (Only callable by the owner)
-pub async fn get_leagues_hosted_by_player(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, player_id: i32, page: u16) -> TypedHttpResponse<Vec<League>> {    
+pub async fn get_leagues_hosted_by_player(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, player_id: u32, page: u16) -> TypedHttpResponse<Vec<League>> {    
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,

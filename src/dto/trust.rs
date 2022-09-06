@@ -7,7 +7,7 @@ pub struct TrustRequestDto {
     #[serde(rename = "authToken")]
     pub auth_token: String,
     #[serde(rename = "trusterId")]
-    pub truster_id: i32,
+    pub truster_id: u32,
     #[serde(rename = "trusteeId")]
-    pub trustee_id: i32,
+    pub trustee_id: u32,
 }

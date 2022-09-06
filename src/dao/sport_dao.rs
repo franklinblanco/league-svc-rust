@@ -7,7 +7,7 @@ pub async fn insert_sport(conn: &mut Transaction<'_, MySql>, sport: Sport) -> Re
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/sport/insert.sql", sport.id, sport.name, sport.category_id).execute(conn).await)
 }
 
-pub async fn get_sport_with_id(conn: &MySqlPool, sport_id: i32) -> Result<Option<Sport>, GenericError<sqlx::Error>>{
+pub async fn get_sport_with_id(conn: &MySqlPool, sport_id: u32) -> Result<Option<Sport>, GenericError<sqlx::Error>>{
     wrap_generic_error_in_wrapper!(sqlx::query_file_as!(Sport, "sql/sport/get.sql", sport_id).fetch_optional(conn).await)
 }
 

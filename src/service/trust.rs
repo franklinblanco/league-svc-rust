@@ -14,7 +14,7 @@ pub async fn add_trusted_player(conn: &MySqlPool, client: &Client, trust_req: Tr
         authenticate_user_with_token(client, &user_for_auth).await,
         Trust
     );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, Trust) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Trust) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Truster Player profile not found.")),
     };
@@ -35,7 +35,7 @@ pub async fn remove_trusted_player(conn: &MySqlPool, client: &Client, trust_req:
         authenticate_user_with_token(client, &user_for_auth).await,
         Trust
     );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id).await, Trust) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Trust) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Truster Player profile not found.")),
     };

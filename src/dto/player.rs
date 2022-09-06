@@ -28,7 +28,7 @@ pub struct PlayerForUpdateDto {
     #[serde(rename = "profilePictureUrl")]
     pub profile_picture_url: Option<String>,
     #[serde(rename = "userId")]
-    pub user_id: i32,
+    pub user_id: u32,
     #[serde(rename = "authToken")]
     pub auth_token: String,
 }
