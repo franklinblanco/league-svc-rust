@@ -16,7 +16,8 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] Create deploy script
 - [x] Check trust count from SELECT COUNT(*) script
 - [x] Check for already existing player trust each time you create a new one
-- [ ] Add trusted player league join request functionality
+- [x] Add trusted player league join request functionality
+- [x] Plan leaving leagues
 - [ ] Phone number validation (user-svc)
 - [ ] Player fields validation 
 - [x] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
