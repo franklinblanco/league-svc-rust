@@ -1,4 +1,4 @@
 UPDATE league_player set 
 last_updated = NOW(),
 status = ?
-WHERE id = ?;
+WHERE league_id = ? AND player_id = ?;

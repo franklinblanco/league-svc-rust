@@ -65,16 +65,19 @@ pub async fn change_league_request_status(conn: &MySqlPool, client: &Client, new
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
+    //TODO: Validate prev and next status. E.G: Previous status is joined then next status can't be Denied, but can be Kicked.
     if league.owner_id != user.id {
         return TypedHttpResponse::return_standard_error(401, MessageResource::new_from_str("You don't own this league..."))
     }
-    let mut persisted_league_player = match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, join_req.user_id).await, LeaguePlayer).get(0) {
+    match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, join_req.user_id).await, LeaguePlayer).get(0) {
         Some(league_player) => league_player.clone(),
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("LeaguePlayer not found with given ids.")),
     };
-    unwrap_or_return_handled_error!(league_player_dao::update_league_player_status(conn, user.id, &new_status).await, LeaguePlayer);
-    persisted_league_player.status = new_status.to_string();
-    TypedHttpResponse::return_standard_response(200, persisted_league_player)
+    unwrap_or_return_handled_error!(league_player_dao::update_league_player_status(conn, join_req.league_id, join_req.user_id, &new_status).await, LeaguePlayer);
+    TypedHttpResponse::return_standard_response(200, match unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, join_req.league_id, join_req.user_id).await, LeaguePlayer).get(0){
+        Some(res) => res.clone(),
+        None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Couldn't find league join request, something is wrong...")),
+    })
 }
 
 
