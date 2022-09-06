@@ -10,16 +10,16 @@ use crate::{domain::place::Place, service::place};
 
 
 #[get("/country/{country}/page/{page}")]
-pub async fn get_places_for_country_paged(conn: Data<Arc<MySqlPool>>, path_args: Path<(String, i32)> ) -> TypedHttpResponse<Vec<Place>> {
+pub async fn get_places_for_country_paged(conn: Data<Arc<MySqlPool>>, path_args: Path<(String, u16)> ) -> TypedHttpResponse<Vec<Place>> {
     place::get_places_for_country_paged(&conn, path_args.0.clone(), path_args.1).await
 }
 
 #[get("/sport/{sport_id}/page/{page}")]
-pub async fn get_places_for_sport(conn: Data<Arc<MySqlPool>>, path_args: Path<(i32, i32)>) -> TypedHttpResponse<Vec<Place>> {
+pub async fn get_places_for_sport(conn: Data<Arc<MySqlPool>>, path_args: Path<(i32, u16)>) -> TypedHttpResponse<Vec<Place>> {
     place::get_places_for_sport(&conn, path_args.0, path_args.1).await
 }
 
 #[post("/nearme/{page}")]
-pub async fn get_places_near_me(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, page: Path<i32>) -> TypedHttpResponse<Vec<Place>> {
+pub async fn get_places_near_me(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, page: Path<u16>) -> TypedHttpResponse<Vec<Place>> {
     place::get_places_near_me(&conn, &client, user.0, *page).await
 }

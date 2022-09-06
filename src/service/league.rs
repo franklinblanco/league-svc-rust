@@ -4,7 +4,7 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{domain::league::League, dto::league::LeagueForCreationDto, util::env_util::APP_NAME, dao::{player_dao::{get_player_with_id}, league_dao::{insert_league, get_league_with_id, get_leagues_by_country_limited_to, get_leagues_by_in_place_limited_to, get_leagues_by_player_limited_to},}};
+use crate::{domain::league::League, dto::league::LeagueForCreationDto, util::{env_util::APP_NAME, repeat_utils::get_from_and_to_from_page}, dao::{player_dao::{get_player_with_id}, league_dao::{insert_league, get_league_with_id, get_leagues_by_country_limited_to, get_leagues_by_in_place_limited_to, get_leagues_by_player_limited_to},}};
 
 /// Create a league.
 pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForCreationDto) -> TypedHttpResponse<League> {
@@ -42,7 +42,7 @@ pub async fn get_league(conn: &MySqlPool, id: i32) -> TypedHttpResponse<League> 
 
 
 /// This route infers the player's area by his country & city.
-pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, page: i32) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, page: u16) -> TypedHttpResponse<Vec<League>> {
     let user = unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -52,11 +52,12 @@ pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
-    // Code to get the fromRow and the ToRow numbers out of a single page number
-    let from_row = (page * 20) - 20;
-    let to_row = page * 20;
+    let page_limits = match get_from_and_to_from_page(page) {
+        Ok(res) => res,
+        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
+    };
 
-    let res = unwrap_or_return_handled_error!(get_leagues_by_country_limited_to(conn, player.country, from_row, to_row).await, Vec<League>);
+    let res = unwrap_or_return_handled_error!(get_leagues_by_country_limited_to(conn, player.country, page_limits.0, page_limits.1).await, Vec<League>);
     if res.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, res);
     }
@@ -66,11 +67,12 @@ pub async fn get_open_leagues_in_my_area(conn: &MySqlPool, client: &Client, user
 
 
 /// This route is used to get leagues from a country
-pub async fn get_leagues_in_country(conn: &MySqlPool, country: &String, page: i32,) -> TypedHttpResponse<Vec<League>> {
-    // Code to get the fromRow and the ToRow numbers out of a single page number
-    let from_row = (page * 20) - 20;
-    let to_row = page * 20;
-    let res = unwrap_or_return_handled_error!(get_leagues_by_country_limited_to(conn, country.clone(), from_row, to_row).await, Vec<League>);
+pub async fn get_leagues_in_country(conn: &MySqlPool, country: &String, page: u16,) -> TypedHttpResponse<Vec<League>> {
+    let page_limits = match get_from_and_to_from_page(page) {
+        Ok(res) => res,
+        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
+    };
+    let res = unwrap_or_return_handled_error!(get_leagues_by_country_limited_to(conn, country.clone(), page_limits.0, page_limits.1).await, Vec<League>);
     if res.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, res);
     }
@@ -80,11 +82,12 @@ pub async fn get_leagues_in_country(conn: &MySqlPool, country: &String, page: i3
 
 
 /// This route is used to get leagues from a country
-pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: i32, page: i32,) -> TypedHttpResponse<Vec<League>> {
-    // Code to get the fromRow and the ToRow numbers out of a single page number
-    let from_row = (page * 20) - 20;
-    let to_row = page * 20;
-    let res = unwrap_or_return_handled_error!(get_leagues_by_in_place_limited_to(conn, place_id, from_row, to_row).await, Vec<League>);
+pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: i32, page: u16,) -> TypedHttpResponse<Vec<League>> {
+    let page_limits = match get_from_and_to_from_page(page) {
+        Ok(res) => res,
+        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
+    };
+    let res = unwrap_or_return_handled_error!(get_leagues_by_in_place_limited_to(conn, place_id, page_limits.0, page_limits.1).await, Vec<League>);
     if res.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, res);
     }
@@ -94,18 +97,19 @@ pub async fn get_leagues_in_place(conn: &MySqlPool, place_id: i32, page: i32,) -
 
 
 /// Only shows non unlisted leagues //TODO: Make a new endpoint to get MyLeagues (Only callable by the owner)
-pub async fn get_leagues_hosted_by_player(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, player_id: i32, page: i32) -> TypedHttpResponse<Vec<League>> {    
+pub async fn get_leagues_hosted_by_player(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, player_id: i32, page: u16) -> TypedHttpResponse<Vec<League>> {    
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<League>
     );
 
-    // Code to get the fromRow and the ToRow numbers out of a single page number
-    let from_row = (page * 20) - 20;
-    let to_row = page * 20;
+    let page_limits = match get_from_and_to_from_page(page) {
+        Ok(res) => res,
+        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
+    };
 
-    let leagues = unwrap_or_return_handled_error!(get_leagues_by_player_limited_to(conn, player_id, from_row, to_row).await, Vec<League>);
+    let leagues = unwrap_or_return_handled_error!(get_leagues_by_player_limited_to(conn, player_id, page_limits.0, page_limits.1).await, Vec<League>);
     if leagues.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, leagues);
     }

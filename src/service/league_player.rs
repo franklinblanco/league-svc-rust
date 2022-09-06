@@ -4,7 +4,7 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{dto::league_player::JoinRequest, domain::{league::{LeagueVisibility, League}, league_player::LeaguePlayer, enums::league_player_status::LeaguePlayerStatus, player::Player}, util::env_util::APP_NAME, dao::{player_dao::{get_player_with_id, self}, league_dao, league_player_dao}};
+use crate::{dto::league_player::JoinRequest, domain::{league::{LeagueVisibility, League}, league_player::LeaguePlayer, enums::league_player_status::LeaguePlayerStatus, player::Player}, util::{env_util::APP_NAME, repeat_utils::get_from_and_to_from_page}, dao::{player_dao::{get_player_with_id, self}, league_dao, league_player_dao}};
 
 
 pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req: JoinRequest) -> TypedHttpResponse<LeaguePlayer> {
@@ -81,16 +81,18 @@ pub async fn change_league_request_status(conn: &MySqlPool, client: &Client, new
 }
 
 
-pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, client: &Client, join_req: JoinRequest, page: i32) -> TypedHttpResponse<Vec<League>> {
+pub async fn get_all_leagues_player_has_applied_to(conn: &MySqlPool, client: &Client, join_req: JoinRequest, page: u16) -> TypedHttpResponse<Vec<League>> {
     let user_for_auth = UserForAuthenticationDto { app: APP_NAME.to_owned(), id: join_req.user_id.to_string(), token: join_req.auth_token.clone()};
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<League>
     );
-    let from_row = (page * 20) - 20;
-    let to_row = page * 20;
-    let resulting_leagues = unwrap_or_return_handled_error!(league_dao::get_all_leagues_player_has_applied_to(conn, join_req.user_id, from_row, to_row).await, Vec<League>);
+    let page_limits = match get_from_and_to_from_page(page) {
+        Ok(res) => res,
+        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
+    };
+    let resulting_leagues = unwrap_or_return_handled_error!(league_dao::get_all_leagues_player_has_applied_to(conn, join_req.user_id, page_limits.0, page_limits.1).await, Vec<League>);
     if resulting_leagues.len() > 0 {
         return TypedHttpResponse::return_standard_response(200, resulting_leagues);
     }
