@@ -23,6 +23,7 @@ pub async fn add_trusted_player(conn: &MySqlPool, client: &Client, trust_req: Tr
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Trustee Player profile not found.")),
     };
     let trust_to_insert = Trust::new_from_join_request(&trust_req);
+    if trust_req.truster_id == trust_req.trustee_id { return TypedHttpResponse::return_standard_error(400, MessageResource::new_from_str("You can't trust yourself..."))}
     unwrap_or_return_handled_error!(trust_dao::insert_trust(conn, &trust_to_insert).await, Trust);
     TypedHttpResponse::return_standard_response(200, trust_to_insert)
 }
@@ -42,7 +43,9 @@ pub async fn remove_trusted_player(conn: &MySqlPool, client: &Client, trust_req:
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Trustee Player profile not found.")),
     };
-    unwrap_or_return_handled_error!(trust_dao::delete_trust_with_both_ids(conn, trust_req.truster_id, trust_req.trustee_id).await, Trust);
-    TypedHttpResponse::return_empty_response(200)
+    match unwrap_or_return_handled_error!(trust_dao::delete_trust_with_both_ids(conn, trust_req.truster_id, trust_req.trustee_id).await, Trust).rows_affected() {
+        0 => TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("You didn't trust this player in the first place.")),
+        _ => TypedHttpResponse::return_empty_response(200)
+    }
 }
 

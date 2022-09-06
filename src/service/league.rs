@@ -21,7 +21,8 @@ pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForC
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
 
-    //TODO: validate league details
+    // TODO: Validation: League time must be in the future
+    // TODO: Validate user doesn't have more than 10 leagues open?
     let league_query_reuslt = unwrap_or_return_handled_error!(insert_league(conn, League::new_from_league_for_creation_dto(league)).await, League);
     
     match unwrap_or_return_handled_error!(get_league_with_id(conn, league_query_reuslt.last_insert_id() as i32).await, League) {
