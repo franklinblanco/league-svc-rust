@@ -5,7 +5,7 @@ Have all places and what sports they offer mainly
 Ranking system for players to find other players to play with
 Positive, negative reviews, no-shows, yes-shows
 
-FOCUS ON: Building a user base, the business will come once you are established as a used website, then you can sell place recommendations, ads, group interests, and sell payment service + schedules for the places.
+**FOCUS ON**: Building a user base, the business will come once you are established as a used website, then you can sell place recommendations, ads, group interests, and sell payment service + schedules for the places.
 
 
 ### Todo's for pre-release 0.9
