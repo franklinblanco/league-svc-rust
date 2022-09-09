@@ -47,7 +47,8 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
             .app_data(client_state.clone())
-            .service(web::scope("/player")
+            .service(web::scope("/league")
+                .service(web::scope("/player")
                 .service(player::create_player_profile)
                 .service(player::edit_player_profile)
                 .service(player::login)
@@ -80,7 +81,7 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
 
             .service(web::scope("/trust")
                 .service(trust::add_trusted_player)
-                .service(trust::remove_trusted_player))
+                .service(trust::remove_trusted_player)))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?

@@ -13,17 +13,18 @@ Positive, negative reviews, no-shows, yes-shows
 - [x] Check all page parameters to not be 0
 - [x] Change all id paths to unsigned integers
 - [x] Fix multiplication overflow panic on page sizes
-- [ ] Create deploy script
+- [x] Create deploy script
 - [x] Check trust count from SELECT COUNT(*) script
 - [x] Check for already existing player trust each time you create a new one
 - [x] Add trusted player league join request functionality
-- [x] Plan leaving leagues
+- [ ] Plan leaving leagues
 - [ ] Phone number validation (user-svc)
 - [ ] Player fields validation 
 - [x] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
 - [ ] Place submission by users (non approved)
 - [ ] Forgor password? (in user-svc)
 - [ ] Create big dto containing League, place, and all players in league (plus queue (number of Unaccepted join requests)) and make an endpoint to retrieve this from the frontend
+- [ ] GetPlayer endpoint should return complete user profile (or at least login + create user)
 
 ### Features not for pre-release 0.9
 - [ ] User blocking / blacklisting
