@@ -1,4 +1,5 @@
 use std::{sync::{Arc}, collections::HashMap};
+use actix_cors::Cors;
 use actix_web::{HttpServer, App, web};
 use chrono::Utc;
 use reqwest::Client;
@@ -42,46 +43,48 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
     let client_state = web::Data::new(Arc::new(Client::new()));
     //  Start server code that turns into a future to be executed below
     let server_future = HttpServer::new( move || {
+        let cors_policy = Cors::permissive();
         App::new()
+            .wrap(cors_policy)
         //  Define routes & pass in shared state
             .app_data(db_conn_state.clone())
             .app_data(env_vars_state.clone())
             .app_data(client_state.clone())
             .service(web::scope("/league")
                 .service(web::scope("/player")
-                .service(player::create_player_profile)
-                .service(player::edit_player_profile)
-                .service(player::login)
-                .service(player::get_player_profile)
-                .service(player::get_player_trusted_list)
-                .service(player::get_player_trusted_by_list))
+                    .service(player::create_player_profile)
+                    .service(player::edit_player_profile)
+                    .service(player::login)
+                    .service(player::get_player_profile)
+                    .service(player::get_player_trusted_list)
+                    .service(player::get_player_trusted_by_list))
 
-            .service(web::scope("/league")
-                .service(league::create_league)
-                .service(league::get_open_leagues_in_my_area)
-                .service(league::get_specific_league)
-                .service(league::get_leagues_in_country)
-                .service(league::get_leagues_hosted_by_player)
-                .service(league::get_leagues_in_place))
+                .service(web::scope("/league")
+                    .service(league::create_league)
+                    .service(league::get_open_leagues_in_my_area)
+                    .service(league::get_specific_league)
+                    .service(league::get_leagues_in_country)
+                    .service(league::get_leagues_hosted_by_player)
+                    .service(league::get_leagues_in_place))
 
-            .service(web::scope("/sport")
-                .service(sport::get_all_sports))
+                .service(web::scope("/sport")
+                    .service(sport::get_all_sports))
 
-            .service(web::scope("/place")
-                .service(place::get_places_for_country_paged)
-                .service(place::get_places_for_sport)
-                .service(place::get_places_near_me))
+                .service(web::scope("/place")
+                    .service(place::get_places_for_country_paged)
+                    .service(place::get_places_for_sport)
+                    .service(place::get_places_near_me))
 
-            .service(web::scope("/league_player")
-                .service(league_player::get_all_leagues_player_has_applied_to)
-                .service(league_player::get_all_players_in_league)
-                .service(league_player::get_league_request_status)
-                .service(league_player::request_to_join_league)
-                .service(league_player::change_league_request_status))
+                .service(web::scope("/league_player")
+                    .service(league_player::get_all_leagues_player_has_applied_to)
+                    .service(league_player::get_all_players_in_league)
+                    .service(league_player::get_league_request_status)
+                    .service(league_player::request_to_join_league)
+                    .service(league_player::change_league_request_status))
 
-            .service(web::scope("/trust")
-                .service(trust::add_trusted_player)
-                .service(trust::remove_trusted_player)))
+                .service(web::scope("/trust")
+                    .service(trust::add_trusted_player)
+                    .service(trust::remove_trusted_player)))
             //.service(user_routes::get_user_from_db)
     })
     .bind((host_addr, host_port))?
