@@ -7,8 +7,6 @@ use util::{env_util};
 pub mod util;
 pub mod dao;
 pub mod routes;
-pub mod domain;
-pub mod dto;
 pub mod service;
 pub mod validation;
 

@@ -5,8 +5,9 @@ use dev_dtos::{domain::user::{token::Token}, dtos::user::user_dtos::UserForLogin
 use actix_web::{post, web::{Json, self, Path}, put, get};
 use reqwest::Client;
 use sqlx::MySqlPool;
+use league_types::{domain::{player::Player, }, dto::{player::*,}};
 
-use crate::{dto::player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto}, service::player, domain::player::Player};
+use crate::service::player;
 
 #[post("")]
 pub async fn create_player_profile(db_conn: web::Data<Arc<MySqlPool>>, client: web::Data<Arc<Client>>, player: Json<PlayerForCreationDto>) -> TypedHttpResponse<Token> {

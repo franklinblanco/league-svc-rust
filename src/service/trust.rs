@@ -1,11 +1,12 @@
-use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error, dtos::message::MessageResource};
+use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error};
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
+use league_types::{APP_NAME, dto::trust::TrustRequestDto, domain::trust::Trust};
 use reqwest::Client;
 use sqlx::MySqlPool;
+use err::MessageResource;
 
-use crate::{domain::{trust::Trust}, dto::trust::{TrustRequestDto}, util::env_util::APP_NAME, dao::{player_dao::get_player_with_id, trust_dao}};
-
+use crate::dao::{trust_dao, player_dao::get_player_with_id};
 
 pub async fn add_trusted_player(conn: &MySqlPool, client: &Client, trust_req: TrustRequestDto) -> TypedHttpResponse<Trust> {
     let user_for_auth = UserForAuthenticationDto {app: APP_NAME.to_string(), id: trust_req.truster_id.to_string(), token: trust_req.auth_token.clone() };

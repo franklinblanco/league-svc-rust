@@ -5,8 +5,10 @@ use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
 use sqlx::MySqlPool;
+use league_types::{dto::league::LeagueForCreationDto, domain::league::League};
 
-use crate::{domain::league::League, service::league::{self}, dto::league::LeagueForCreationDto};
+use crate::service::league;
+
 
 #[post("")]
 pub async fn create_league(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, league: Json<LeagueForCreationDto>) -> TypedHttpResponse<League> {

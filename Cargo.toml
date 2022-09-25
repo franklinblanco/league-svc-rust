@@ -14,10 +14,12 @@ serde_json = { version = "1" }
 sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal" ] }
 actix-web = "4"
 actix-cors = "0.6.2"
-actix-web-utils = "0.2"
 chrono = { version = "0.4", features = [ "serde" ] }
 reqwest = { version = "0.11.11", features = [ "json" ]}
 openssl = { version = "0.10", features = ["vendored"] }
 
-dev-dtos = { git = "https://backend:Eo1n1TPsyWV7wwo9uFwgUJGKKheMM6paM2mDkVPA4zqkh5dt6Q6XPkbtojzYQudQsM84vSwKmhHHTPjyn535d6NLBmA3meeGj0Gb8if4sceAwvySdmzedg5mN2P5zzQt@gitea.blancoinfante.com/blancoinfante_backend/dev-dtos-rust.git" }
+actix-web-utils = { git = "https://github.com/franklinblanco/actix-web-utils.git" }
+err = { git = "https://github.com/franklinblanco/err.git" }
+league-types = { git = "https://github.com/franklinblanco/league-types.git" }
+dev-dtos = { git = "https://github.com/franklinblanco/user-dtos.git" }
 dev-communicators = { git = "https://backend:Eo1n1TPsyWV7wwo9uFwgUJGKKheMM6paM2mDkVPA4zqkh5dt6Q6XPkbtojzYQudQsM84vSwKmhHHTPjyn535d6NLBmA3meeGj0Gb8if4sceAwvySdmzedg5mN2P5zzQt@gitea.blancoinfante.com/blancoinfante_backend/dev-communicators-rust.git" }

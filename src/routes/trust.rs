@@ -4,9 +4,9 @@ use actix_web::{post, web::{Json, Data}, delete};
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use reqwest::Client;
 use sqlx::MySqlPool;
+use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto};
 
-use crate::{domain::{trust::Trust}, dto::trust::TrustRequestDto, service::trust};
-
+use crate::service::trust;
 
 #[post("")]
 pub async fn add_trusted_player(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, trust_req: Json<TrustRequestDto>) -> TypedHttpResponse<Trust> {

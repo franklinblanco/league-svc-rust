@@ -1,11 +1,12 @@
-use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error, dtos::message::MessageResource};
+use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error};
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
-use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
+use dev_dtos::{dtos::{user::user_dtos::{UserForAuthenticationDto}}};
+use league_types::{APP_NAME, dto::league_player::JoinRequest, domain::{player::Player, league_player::LeaguePlayer, enums::league_player_status::LeaguePlayerStatus, league::{LeagueVisibility, League}}};
 use reqwest::Client;
 use sqlx::MySqlPool;
+use err::MessageResource;
 
-use crate::{dto::league_player::JoinRequest, domain::{league::{LeagueVisibility, League}, league_player::LeaguePlayer, enums::league_player_status::LeaguePlayerStatus, player::Player}, util::{env_util::APP_NAME, repeat_utils::get_from_and_to_from_page}, dao::{player_dao::{get_player_with_id, self}, league_dao, league_player_dao, trust_dao}};
-
+use crate::{dao::{league_player_dao, trust_dao, player_dao, league_dao}, util::{repeat_utils::get_from_and_to_from_page}};
 
 pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req: JoinRequest) -> TypedHttpResponse<LeaguePlayer> {
     let league = match unwrap_or_return_handled_error!(league_dao::get_league_with_id(conn, join_req.league_id).await, LeaguePlayer) {
@@ -18,7 +19,7 @@ pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req:
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, LeaguePlayer) {
+    match unwrap_or_return_handled_error!(player_dao::get_player_with_id(conn, user.id as u32).await, LeaguePlayer) {
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };

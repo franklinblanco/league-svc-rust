@@ -4,8 +4,9 @@ use actix_web::{web::{Data, Json, Path}, post, put};
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use reqwest::Client;
 use sqlx::MySqlPool;
+use league_types::{domain::{league_player::LeaguePlayer, player::Player, league::League, enums::league_player_status::LeaguePlayerStatus}, dto::league_player::JoinRequest};
 
-use crate::{dto::league_player::JoinRequest, domain::{league_player::LeaguePlayer, league::League, player::Player, enums::league_player_status::LeaguePlayerStatus}, service::league_player};
+use crate::service::league_player;
 
 #[post("/request")]
 pub async fn request_to_join_league(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, join_req: Json<JoinRequest>) -> TypedHttpResponse<LeaguePlayer> {

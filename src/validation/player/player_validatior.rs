@@ -1,5 +1,5 @@
-use actix_web_utils::dtos::message::MessageResource;
 use chrono::{NaiveDate};
+use err::MessageResource;
 
 pub fn validate_name(_name: &String) -> Result<(), MessageResource> {
     Ok(())

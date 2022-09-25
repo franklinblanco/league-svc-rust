@@ -1,7 +1,8 @@
 
 // Here I'll have a lot of errors that repeat
 
-use actix_web_utils::{dtos::message::MessageResource};
+use err::MessageResource;
+
 const PAGE_SIZE: u32 = 20;
 
 /// Get From row and To row for database operations that are paged. 

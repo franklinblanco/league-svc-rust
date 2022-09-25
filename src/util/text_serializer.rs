@@ -1,4 +1,4 @@
-use crate::domain::sport::Sport;
+use league_types::domain::sport::Sport;
 
 pub fn parse_sport_list() -> Vec<Sport> {
     let file = include_str!("../../sport_list.txt");

@@ -1,7 +1,6 @@
 use actix_web_utils::{extensions::generic_error::GenericError, wrap_generic_error_in_wrapper};
+use league_types::domain::league::{League, LeagueVisibility};
 use sqlx::{MySqlPool, mysql::MySqlQueryResult};
-
-use crate::domain::league::{League, LeagueVisibility};
 
 pub async fn insert_league(conn: &MySqlPool, league: League) -> Result<MySqlQueryResult, GenericError<sqlx::Error>>{
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/league/insert.sql", league.owner_id, league.sport_id, league.place_id, league.state, league.visibility, league.date_and_time, league.cost_to_join, league.currency, league.max_players, league.description).execute(conn).await)

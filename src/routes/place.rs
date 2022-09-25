@@ -5,9 +5,9 @@ use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use reqwest::Client;
 use sqlx::MySqlPool;
+use league_types::{domain::{place::Place}};
 
-use crate::{domain::place::Place, service::place};
-
+use crate::service::place;
 
 #[get("/country/{country}/page/{page}")]
 pub async fn get_places_for_country_paged(conn: Data<Arc<MySqlPool>>, path_args: Path<(String, u16)> ) -> TypedHttpResponse<Vec<Place>> {

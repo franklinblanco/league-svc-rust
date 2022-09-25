@@ -1,7 +1,6 @@
 use actix_web_utils::{extensions::generic_error::GenericError, wrap_generic_error_in_wrapper};
+use league_types::domain::{trust::Trust, dao_utils::Count};
 use sqlx::{MySqlPool, mysql::MySqlQueryResult};
-
-use crate::domain::{trust::Trust, dao_utils::Count};
 
 pub async fn insert_trust(conn: &MySqlPool, trust: &Trust) -> Result<MySqlQueryResult, GenericError<sqlx::Error>>{
     wrap_generic_error_in_wrapper!(sqlx::query_file!("sql/trust/insert.sql", trust.truster_id, trust.trustee_id).execute(conn).await)

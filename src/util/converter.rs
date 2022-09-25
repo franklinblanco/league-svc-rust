@@ -1,7 +1,7 @@
-use actix_web_utils::dtos::message::MessageResource;
+use err::MessageResource;
+use league_types::{domain::player::Player, dto::player::PlayerForUpdateDto};
 
-use crate::{dto::player::PlayerForUpdateDto, domain::player::Player, validation::player::player_validatior::{validate_name, validate_bio, validate_profile_picture_url, validate_birth_date, validate_country, validate_identification_number, validate_city}};
-
+use crate::validation::player::player_validatior::*;
 
 /// Checks for all the fields inside the PlayerForUpdateDto to see if any where recieved. Then if it finds any, it sends that to the 
 /// Corresponding validation method to check that it's valid. In case it's not it throws back a list of errors for the client.

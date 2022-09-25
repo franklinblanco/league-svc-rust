@@ -1,10 +1,12 @@
-use actix_web_utils::{extensions::typed_response::TypedHttpResponse, dtos::message::MessageResource, unwrap_or_return_handled_error};
+use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error};
 use dev_communicators::middleware::{user_svc::user_service::{create_user, self}};
 use dev_dtos::{domain::user::{token::Token}, dtos::user::user_dtos::{UserForAuthenticationDto, UserForLoginDto}};
+use err::MessageResource;
+use league_types::{APP_NAME, dto::player::{PlayerForUpdateDto, PlayerForCreationDto, PlayerProfileDto}, domain::player::Player};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{dto::player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto}, util::{env_util::APP_NAME, converter}, dao::{player_dao, trust_dao}, domain::player::Player};
+use crate::{dao::{player_dao, trust_dao}, util::converter};
 
 /// Self explanatory name
 pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: PlayerForCreationDto) -> TypedHttpResponse<Token> {
@@ -61,7 +63,7 @@ pub async fn get_player_trusted_list(conn: &MySqlPool, player_id: u32) -> TypedH
     
     match player_dao::get_all_trusted_players(conn, player_id).await {
         Ok(players) => TypedHttpResponse::return_standard_response(200, players.into_iter().map(|player| Player::clear_all_sensitive_fields(player)).collect()),
-        Err(e) => TypedHttpResponse::return_standard_error(500, MessageResource::new_from_err(e.error.to_string())),
+        Err(e) => TypedHttpResponse::return_standard_error(500, MessageResource::from(e.error)),
     }
 }
 
@@ -73,6 +75,6 @@ pub async fn get_player_trusted_by_list(conn: &MySqlPool, player_id: u32) -> Typ
     
     match player_dao::get_all_players_that_trust_player(conn, player_id).await {
         Ok(players) => TypedHttpResponse::return_standard_response(200, players.into_iter().map(|player| Player::clear_all_sensitive_fields(player)).collect()),
-        Err(e) => TypedHttpResponse::return_standard_error(500, MessageResource::new_from_err(e.error.to_string())),
+        Err(e) => TypedHttpResponse::return_standard_error(500, MessageResource::from(e.error)),
     }
 }
