@@ -15,7 +15,7 @@ pub async fn create_league(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>
     league::create_league(&conn, &client, league.0).await
 }
 
-#[get("/nearme/{page}")]
+#[post("/nearme/{page}")]
 pub async fn get_open_leagues_in_my_area(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, page: Path<u16>) -> TypedHttpResponse<Vec<League>> { // frontend should hit another endpoint if the user isn't registered
     league::get_open_leagues_in_my_area(&conn, &client, user.0, *page).await
 }
