@@ -39,3 +39,8 @@ pub async fn get_leagues_hosted_by_player(conn: Data<Arc<MySqlPool>>, client: Da
 pub async fn get_leagues_in_place(conn: Data<Arc<MySqlPool>>, path_args: web::Path<(u32, u16)>) -> TypedHttpResponse<Vec<League>> {
     league::get_leagues_in_place(&conn, path_args.0, path_args.1).await
 }
+
+#[post("/league/{league_id}/age")]
+pub async fn get_average_league_age(conn: Data<Arc<MySqlPool>>, client: Data<Arc<Client>>, user: Json<UserForAuthenticationDto>, league_id: web::Path<u32>) -> TypedHttpResponse<u8> {
+    league::get_average_league_age(&conn, &client, user.0, *league_id).await
+}

@@ -65,7 +65,8 @@ pub async fn start_all_routes(db_conn: MySqlPool, env_vars: HashMap<String, Stri
                     .service(league::get_specific_league)
                     .service(league::get_leagues_in_country)
                     .service(league::get_leagues_hosted_by_player)
-                    .service(league::get_leagues_in_place))
+                    .service(league::get_leagues_in_place)
+                    .service(league::get_average_league_age))
 
                 .service(web::scope("/sport")
                     .service(sport::get_all_sports))

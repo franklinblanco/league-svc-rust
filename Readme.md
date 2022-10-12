@@ -25,7 +25,7 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] Forgor password? (in user-svc)
 - [ ] Create big dto containing League, place, and all players in league (plus queue (number of Unaccepted join requests)) and make an endpoint to retrieve this from the frontend
 - [ ] GetPlayer endpoint should return complete user profile (or at least login + create user)
-- [ ] Age groups
+- [x] Age groups (Kind of already done)
 - [x] UTC timezone instead of naivedatetime
 
 ### Features not for pre-release 0.9

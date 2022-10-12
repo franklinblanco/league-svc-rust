@@ -1,4 +1,5 @@
 use actix_web_utils::{extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error};
+use chrono::Utc;
 use dev_communicators::middleware::{user_svc::user_service::authenticate_user_with_token};
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
@@ -6,7 +7,7 @@ use league_types::{dto::league::LeagueForCreationDto, domain::league::League, AP
 use reqwest::Client;
 use sqlx::MySqlPool;
 
-use crate::{dao::{player_dao::*, league_dao::*}, util::repeat_utils::get_from_and_to_from_page};
+use crate::{dao::{player_dao::{*, self}, league_dao::*}, util::repeat_utils::get_from_and_to_from_page};
 
 /// Create a league.
 pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForCreationDto) -> TypedHttpResponse<League> {
@@ -116,4 +117,19 @@ pub async fn get_leagues_hosted_by_player(conn: &MySqlPool, client: &Client, use
         return TypedHttpResponse::return_standard_response(200, leagues);
     }
     TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("No leagues found for place."))
+}
+
+pub async fn get_average_league_age(conn: &MySqlPool, client: &Client, user_for_auth: UserForAuthenticationDto, league_id: u32) -> TypedHttpResponse<u8> {
+    unwrap_or_return_handled_error!(
+        401,
+        authenticate_user_with_token(client, &user_for_auth).await,
+        u8
+    );
+    let all_players_in_league = unwrap_or_return_handled_error!(player_dao::get_all_players_in_league(conn, league_id).await, u8);
+    let (mut age_total, mut amount): (u8, u8) = (0,0);
+    for player in all_players_in_league {
+        age_total = age_total + (Utc::now().date_naive().signed_duration_since(player.birth_date).num_days() / 365) as u8;
+        amount += 1;
+    }
+    TypedHttpResponse::return_standard_response(200, age_total/amount)
 }
