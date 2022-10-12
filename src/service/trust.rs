@@ -27,7 +27,7 @@ pub async fn add_trusted_player(conn: &MySqlPool, client: &Client, trust_req: Tr
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Trustee Player profile not found.")),
     };
-    let trust_to_insert = Trust::new_from_join_request(&trust_req);
+    let trust_to_insert = Trust::from(trust_req.clone());
     if trust_req.truster_id == trust_req.trustee_id { return TypedHttpResponse::return_standard_error(400, MessageResource::new_from_str("You can't trust yourself..."))}
     unwrap_or_return_handled_error!(trust_dao::insert_trust(conn, &trust_to_insert).await, Trust);
     TypedHttpResponse::return_standard_response(200, trust_to_insert)

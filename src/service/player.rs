@@ -13,7 +13,8 @@ pub async fn create_player_profile(conn: &MySqlPool, client: &Client, player: Pl
     let user_for_creation = PlayerForCreationDto::convert_player_into_user_for_creation(&player);
 
     let persisted_token = unwrap_or_return_handled_error!(create_user(client, &user_for_creation).await, Token);
-    let player_to_persist = Player::new_from_creation_dto(&player, &(persisted_token.user_id as u32));
+    let mut player_to_persist = Player::from(player);
+    player_to_persist.id = persisted_token.user_id as u32;
     unwrap_or_return_handled_error!(500, player_dao::insert_player(conn, player_to_persist).await, Token);
     TypedHttpResponse::return_standard_response(200, persisted_token)
 }

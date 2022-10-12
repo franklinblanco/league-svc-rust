@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS field (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     place_id INT UNSIGNED NOT NULL,
-    time_created DATETIME NOT NULL,
-    last_updated DATETIME NOT NULL,
+    time_created TIMESTAMP NOT NULL,
+    last_updated TIMESTAMP NOT NULL,
     country VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,

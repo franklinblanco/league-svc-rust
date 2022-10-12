@@ -68,7 +68,7 @@ pub async fn insert_all_places_from_list(conn: &MySqlPool) {
     let all_places: Vec<Place> = match serde_json::from_str(include_str!("../../places.json")) {
         Ok(res) => match res {serde_json::Value::Array(arr) => arr.into_iter().map(|val|
             {
-                let mut place = Place::new();
+                let mut place = Place::default();
                 place.name = val.get("name").unwrap().as_str().unwrap().to_string();
                 place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as u32;
                 place.country = val.get("country").unwrap().as_str().unwrap().to_string();

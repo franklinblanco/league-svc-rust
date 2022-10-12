@@ -25,6 +25,8 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] Forgor password? (in user-svc)
 - [ ] Create big dto containing League, place, and all players in league (plus queue (number of Unaccepted join requests)) and make an endpoint to retrieve this from the frontend
 - [ ] GetPlayer endpoint should return complete user profile (or at least login + create user)
+- [ ] Age groups
+- [x] UTC timezone instead of naivedatetime
 
 ### Features not for pre-release 0.9
 - [ ] User blocking / blacklisting
@@ -38,3 +40,4 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] Advertisements for places (Have them pay for ranking)
 - [ ] Chats (Group & DM) KEY FEATURE
 - [ ] SerruchoTM functionality (League owners can charge from the app with credit cards) ($$$)
+- [ ] ELO point system like chess

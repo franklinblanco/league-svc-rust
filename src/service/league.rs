@@ -25,7 +25,7 @@ pub async fn create_league(conn: &MySqlPool, client: &Client, league: LeagueForC
 
     // TODO: Validation: League time must be in the future
     // TODO: Validate user doesn't have more than 10 leagues open?
-    let league_query_reuslt = unwrap_or_return_handled_error!(insert_league(conn, League::new_from_league_for_creation_dto(league)).await, League);
+    let league_query_reuslt = unwrap_or_return_handled_error!(insert_league(conn, League::from(league)).await, League);
     
     match unwrap_or_return_handled_error!(get_league_with_id(conn, league_query_reuslt.last_insert_id() as u32).await, League) {
         Some(league) => TypedHttpResponse::return_standard_response(200, league),

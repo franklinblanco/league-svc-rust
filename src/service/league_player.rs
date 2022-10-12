@@ -23,7 +23,7 @@ pub async fn request_to_join_league(conn: &MySqlPool, client: &Client, join_req:
         Some(player) => player,
         None => return TypedHttpResponse::return_standard_error(404, MessageResource::new_from_str("Player profile not found.")),
     };
-    let mut league_player_to_insert = LeaguePlayer::new_from_join_request(join_req);
+    let mut league_player_to_insert = LeaguePlayer::from(join_req);
     let persisted_league_players = unwrap_or_return_handled_error!(league_player_dao::get_league_players_by_player_id_and_league_id(conn, league_player_to_insert.league_id, league_player_to_insert.player_id).await, LeaguePlayer);
     if !persisted_league_players.is_empty() {
         return TypedHttpResponse::return_standard_error(400, MessageResource::new_from_str("Your join request for this league already exists."));
