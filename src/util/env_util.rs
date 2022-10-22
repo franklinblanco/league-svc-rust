@@ -1,9 +1,9 @@
 extern crate dotenv;
 
 use dotenv::dotenv;
-use std::{env, collections::HashMap};
+use std::{collections::HashMap, env};
 
-pub fn get_dot_env_map() -> HashMap<String, String>{
+pub fn get_dot_env_map() -> HashMap<String, String> {
     dotenv().ok();
     let mut dotenv_vars: HashMap<String, String> = HashMap::new();
     for (key, val) in env::vars() {
