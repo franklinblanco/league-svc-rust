@@ -24,11 +24,13 @@ use crate::{
     util::repeat_utils::get_from_and_to_from_page,
 };
 
+/// Creates a LeaguePlayer and checks if the league is open or closed
 pub async fn request_to_join_league(
     conn: &MySqlPool,
     client: &Client,
     join_req: JoinRequest,
 ) -> TypedHttpResponse<LeaguePlayer> {
+    // Get league
     let league = match unwrap_or_return_handled_error!(
         league_dao::get_league_with_id(conn, join_req.league_id).await,
         LeaguePlayer
@@ -41,6 +43,7 @@ pub async fn request_to_join_league(
             )
         }
     };
+    // Authenticate user
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -51,6 +54,7 @@ pub async fn request_to_join_league(
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
+    // Get Player profile
     match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, user.id as u32).await,
         LeaguePlayer
@@ -63,7 +67,9 @@ pub async fn request_to_join_league(
             )
         }
     };
+    // Build LeaguePlayer
     let mut league_player_to_insert = LeaguePlayer::from(join_req);
+    // Get existing league players if any
     let persisted_league_players = unwrap_or_return_handled_error!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
             conn,
@@ -73,18 +79,38 @@ pub async fn request_to_join_league(
         .await,
         LeaguePlayer
     );
+    // Check if there are league players
     if !persisted_league_players.is_empty() {
-        return TypedHttpResponse::return_standard_error(
-            400,
-            MessageResource::new_from_str("Your join request for this league already exists."),
-        );
+        // Loop through the persisted LeaguePlayers
+        // And check if there are any active ones.
+        for persisted_league_player in persisted_league_players {
+            // Parse league player status into enum
+            let persisted_league_player_status = unwrap_or_return_handled_error!(
+                persisted_league_player.status.parse::<LeaguePlayerStatus>(),
+                LeaguePlayer
+            );
+            if persisted_league_player_status.get_status_type() == StatusType::Active {
+                return TypedHttpResponse::return_standard_error(
+                    400,
+                    MessageResource::new_from_str(
+                        "You already have an active join request for this league.",
+                    ),
+                );
+            }
+        }
     }
+    // Parse LeagueVisibility of league to determine what to do.
+    // Then match LeagueVisibility
+    // Public -> Join (If player hasn't left before) Private -> Trust model
+    // Unlisted will deny a player right away
     let join_request_status = match unwrap_or_return_handled_error!(
         400,
         league.visibility.parse::<LeagueVisibility>(),
         LeaguePlayer
     ) {
         LeagueVisibility::Public => LeaguePlayerStatus::Joined,
+        // If player is trusted then Join the league.
+        // If player isn't trusted then request to join the league.
         LeagueVisibility::Private => match unwrap_or_return_handled_error!(
             trust_dao::get_trust_with_both_ids(
                 conn,
@@ -99,12 +125,14 @@ pub async fn request_to_join_league(
         },
         LeagueVisibility::Unlisted => LeaguePlayerStatus::Denied,
     };
+    // Insert league_player_status into DB
     league_player_to_insert.status = join_request_status.to_string();
     let last_insert_id = unwrap_or_return_handled_error!(
         league_player_dao::insert_league_player(conn, &league_player_to_insert).await,
         LeaguePlayer
     )
     .last_insert_id() as u32;
+    // Return both cases, the ResultingLeaguePlayer
     unwrap_or_return_handled_error!(
         500,
         200,
