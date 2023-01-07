@@ -22,16 +22,14 @@ pub async fn insert_league_player(
 
 pub async fn update_league_player_status(
     conn: &MySqlPool,
-    league_id: u32,
-    player_id: u32,
+    league_player_id: u32,
     status: &LeaguePlayerStatus,
 ) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file!(
             "sql/league_player/update.sql",
             status.to_string(),
-            league_id,
-            player_id
+            league_player_id,
         )
         .execute(conn)
         .await

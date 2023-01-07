@@ -59,6 +59,7 @@ pub async fn update_player_with_id(
     )
 }
 
+//TODO: make this method return LeaguePlayers (because this WILL return players that have been kicked or that are awaiting approval)
 pub async fn get_all_players_in_league(
     conn: &MySqlPool,
     league_id: u32,

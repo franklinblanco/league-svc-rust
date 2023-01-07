@@ -7,8 +7,8 @@ use actix_web::{
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use league_types::{
     domain::{
-        enums::league_player_status::LeaguePlayerStatus, league::League,
-        league_player::LeaguePlayer, player::Player,
+        enums::league_player_status::ApprovalStatus, league::League, league_player::LeaguePlayer,
+        player::Player,
     },
     dto::league_player::JoinRequest,
 };
@@ -37,7 +37,7 @@ pub async fn get_league_request_status(
 pub async fn change_league_request_status(
     conn: Data<Arc<MySqlPool>>,
     client: Data<Arc<Client>>,
-    new_status: Path<LeaguePlayerStatus>,
+    new_status: Path<ApprovalStatus>,
     join_req: Json<JoinRequest>,
 ) -> TypedHttpResponse<LeaguePlayer> {
     league_player::change_league_request_status(&conn, &client, new_status.to_owned(), join_req.0)

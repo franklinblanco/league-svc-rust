@@ -17,7 +17,7 @@ Positive, negative reviews, no-shows, yes-shows
 - [x] Check trust count from SELECT COUNT(*) script
 - [x] Check for already existing player trust each time you create a new one
 - [x] Add trusted player league join request functionality
-- [ ] Plan leaving leagues
+- [x] Plan leaving leagues
 - [ ] Phone number validation (user-svc)
 - [ ] Player fields validation 
 - [x] User service error message conversion (Right now we're returning double nested MessageResources. Attempt to parse error message into a single one in this svc (or in communicators))
@@ -27,6 +27,18 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] GetPlayer endpoint should return complete user profile (or at least login + create user)
 - [x] Age groups (Kind of already done)
 - [x] UTC timezone instead of naivedatetime
+- [ ] Interests on signup and changeable (Users have to tell us what their 1-3 favorite sports are)
+- [ ] Chats (Group & DM) KEY FEATURE
+- [ ] Player inviting players to league
+
+#### Bugs left to fix
+- [ ] Make sure one player can't make 2 leagues at the same time. (maybe by replacing the previous one or deleting)
+- [x] Joining a league should be possible as the owner of the league
+- [x] If a player is kicked out of a league he shouldn't be able to join it again unless invited 
+- [ ] Return what state the league player is in on the get_all_leagues player has applied to
+- [ ] Get all players in league endpoint returns players even if they're kicked
+- [ ] Require a token for all endpoints (As this is now a mobile app not a webpage)
+
 
 ### Features not for pre-release 0.9
 - [ ] User blocking / blacklisting
@@ -38,6 +50,5 @@ Positive, negative reviews, no-shows, yes-shows
 - [ ] Tournaments (made up of teams)
 - [ ] Paying places through you (Payment gateway?)
 - [ ] Advertisements for places (Have them pay for ranking)
-- [ ] Chats (Group & DM) KEY FEATURE
 - [ ] SerruchoTM functionality (League owners can charge from the app with credit cards) ($$$)
 - [ ] ELO point system like chess
