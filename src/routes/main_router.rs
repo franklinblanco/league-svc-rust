@@ -67,7 +67,8 @@ pub async fn start_all_routes(
                             .service(player::login)
                             .service(player::get_player_profile)
                             .service(player::get_player_trusted_list)
-                            .service(player::get_player_trusted_by_list),
+                            .service(player::get_player_trusted_by_list)
+                            .service(player::get_player_metadata_bulk),
                     )
                     .service(
                         web::scope("/league")

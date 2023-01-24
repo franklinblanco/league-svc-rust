@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use actix_web::{
     get, post, put,
-    web::{self, Json, Path},
+    web::{self, Json, Path}, HttpRequest,
 };
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use dev_dtos::{domain::user::token::Token, dtos::user::user_dtos::UserForLoginDto};
-use league_types::{domain::player::Player, dto::player::*};
+use dev_macros::authenticate_route;
+use league_types::{domain::player::Player, dto::{player::*, player_metadata::{PlayerMetadata, PlayerIds}}};
 use reqwest::Client;
 use sqlx::MySqlPool;
 
@@ -64,3 +65,15 @@ pub async fn get_player_trusted_by_list(
 }
 //TODO: Verify phone number (prefferably in user-svc)
 //TODO: Verify ID
+
+/// Method to be called to get a large amount of player info such as name, profile picture url, etc...
+#[get("/bulk")]
+pub async fn get_player_metadata_bulk(
+    db_conn: web::Data<Arc<MySqlPool>>,
+    client: web::Data<Arc<Client>>,
+    ids: web::Json<PlayerIds>,
+    request: HttpRequest
+) -> TypedHttpResponse<Vec<PlayerMetadata>> {
+    authenticate_route!(request, &client);
+    player::get_player_metadata_bulk(&db_conn, ids.0).await
+}

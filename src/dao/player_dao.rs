@@ -1,6 +1,8 @@
 use actix_web_utils::{extensions::generic_error::GenericError, wrap_generic_error_in_wrapper};
-use league_types::domain::player::Player;
+use league_types::{domain::player::Player, dto::player_metadata::PlayerMetadata};
 use sqlx::{mysql::MySqlQueryResult, MySqlPool};
+
+use crate::util::from_row::player_metadata_from_row;
 
 pub async fn insert_player(
     conn: &MySqlPool,
@@ -99,4 +101,20 @@ pub async fn get_all_players_that_trust_player(
         .fetch_all(conn)
         .await
     )
+}
+
+pub async fn get_players_bulk(
+    conn: &MySqlPool,
+    player_ids: Vec<u32>,
+) -> Result<Vec<PlayerMetadata>, GenericError<sqlx::Error>> {
+
+    let params = format!("?{}", ", ?".repeat(player_ids.len()-1));
+    let query_str = format!("SELECT id FROM player WHERE id IN ( { } )", params);
+
+    let mut query = sqlx::query(&query_str);
+    for i in player_ids {
+        query = query.bind(i);
+    }
+    let query_result: Result<Vec<PlayerMetadata>, sqlx::Error> = query.fetch_all(conn).await.unwrap().iter().map(|row| player_metadata_from_row(row)).collect();
+    wrap_generic_error_in_wrapper!(query_result)
 }

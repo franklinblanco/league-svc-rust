@@ -11,7 +11,7 @@ tokio = { version = "1.20.1", features = ["full"] }
 dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1" }
-sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal", "offline" ] }
+sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal", "offline" ] }
 actix-web = "4"
 actix-cors = "0.6.2"
 chrono = { version = "0.4", features = [ "serde" ] }
@@ -23,3 +23,4 @@ err = { git = "https://github.com/franklinblanco/err.git" }
 league-types = { git = "https://github.com/franklinblanco/league-types.git" }
 dev-dtos = { git = "https://github.com/franklinblanco/user-svc-dtos-rust.git" }
 dev-communicators = { git = "https://github.com/franklinblanco/user-svc-client-rust.git" }
+dev-macros = { git = "https://github.com/franklinblanco/dev-macros.git" }
