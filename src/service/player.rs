@@ -9,7 +9,10 @@ use dev_dtos::{
 use err::MessageResource;
 use league_types::{
     domain::player::Player,
-    dto::{player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto}, player_metadata::{PlayerMetadata, PlayerIds}},
+    dto::{
+        player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto},
+        player_metadata::{PlayerIds, PlayerMetadata},
+    },
     APP_NAME,
 };
 use reqwest::Client;
@@ -210,9 +213,13 @@ pub async fn get_player_trusted_by_list(
     }
 }
 
-pub async fn get_player_metadata_bulk(conn: &MySqlPool,
+pub async fn get_player_metadata_bulk(
+    conn: &MySqlPool,
     player_ids: PlayerIds,
 ) -> TypedHttpResponse<Vec<PlayerMetadata>> {
-    let player_metadata_list = unwrap_or_return_handled_error!(player_dao::get_players_bulk(conn, player_ids.ids).await, Vec<PlayerMetadata>);
+    let player_metadata_list = unwrap_or_return_handled_error!(
+        player_dao::get_players_bulk(conn, player_ids.ids).await,
+        Vec<PlayerMetadata>
+    );
     TypedHttpResponse::return_standard_response(200, player_metadata_list)
 }

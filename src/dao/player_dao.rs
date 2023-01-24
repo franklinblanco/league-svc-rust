@@ -107,14 +107,22 @@ pub async fn get_players_bulk(
     conn: &MySqlPool,
     player_ids: Vec<u32>,
 ) -> Result<Vec<PlayerMetadata>, GenericError<sqlx::Error>> {
-
-    let params = format!("?{}", ", ?".repeat(player_ids.len()-1));
-    let query_str = format!("SELECT id FROM player WHERE id IN ( { } )", params);
+    let params = format!("?{}", ", ?".repeat(player_ids.len() - 1));
+    let query_str = format!(
+        "SELECT id, name, profile_picture_url FROM player WHERE id IN ( { } )",
+        params
+    );
 
     let mut query = sqlx::query(&query_str);
     for i in player_ids {
         query = query.bind(i);
     }
-    let query_result: Result<Vec<PlayerMetadata>, sqlx::Error> = query.fetch_all(conn).await.unwrap().iter().map(|row| player_metadata_from_row(row)).collect();
+    let query_result: Result<Vec<PlayerMetadata>, sqlx::Error> = query
+        .fetch_all(conn)
+        .await
+        .unwrap()
+        .iter()
+        .map(|row| player_metadata_from_row(row))
+        .collect();
     wrap_generic_error_in_wrapper!(query_result)
 }
