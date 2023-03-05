@@ -15,12 +15,13 @@ sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls", "mysql", "chron
 actix-web = "4"
 actix-cors = "0.6.2"
 chrono = { version = "0.4", features = [ "serde" ] }
-reqwest = { version = "0.11.11", features = [ "json" ]}
-openssl = { version = "0.10", features = ["vendored"] }
+reqwest = { version = "0.11.11", features = ["rustls-tls", "json"], default-features = false }
+openssl = { version = "0.10.1", features = ["vendored"] }
 
-actix-web-utils = { git = "https://github.com/franklinblanco/actix-web-utils.git" }
-err = { git = "https://github.com/franklinblanco/err.git" }
-league-types = { git = "https://github.com/franklinblanco/league-types.git" }
-dev-dtos = { git = "https://github.com/franklinblanco/user-svc-dtos-rust.git" }
-dev-communicators = { git = "https://github.com/franklinblanco/user-svc-client-rust.git" }
-dev-macros = { git = "https://github.com/franklinblanco/dev-macros.git" }
+actix-web-utils = { git = "https://git.franklinblanco.dev/franklinblanco/actix-web-utils.git" }
+err = { git = "https://git.franklinblanco.dev/franklinblanco/err.git" }
+league-types = { git = "https://git.franklinblanco.dev/franklinblanco/league-types.git" }
+
+dev-dtos = { git = "https://git.franklinblanco.dev/franklinblanco/dev-dtos.git" }
+dev-communicators = { git = "https://git.franklinblanco.dev/franklinblanco/dev-communicators.git" }
+dev-macros = { git = "https://git.franklinblanco.dev/franklinblanco/dev-macros.git" }

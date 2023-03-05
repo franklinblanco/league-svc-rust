@@ -28,8 +28,9 @@ Positive, negative reviews, no-shows, yes-shows
 - [x] Age groups (Kind of already done)
 - [x] UTC timezone instead of naivedatetime
 - [ ] Interests on signup and changeable (Users have to tell us what their 1-3 favorite sports are)
-- [ ] Chats (Group & DM) KEY FEATURE
+- [x] Chats (Group & DM) KEY FEATURE
 - [ ] Player inviting players to league
+- [ ] Sport selection & Location Selection Methods
 
 #### Bugs left to fix
 - [ ] Make sure one player can't make 2 leagues at the same time. (maybe by replacing the previous one or deleting)

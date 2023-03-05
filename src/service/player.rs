@@ -86,8 +86,22 @@ pub async fn edit_player_profile(
         player_dao::update_player_with_id(conn, player_to_update).await,
         Player
     );
+    let updated_player = match unwrap_or_return_handled_error!(
+        player_dao::get_player_with_id(conn, persisted_user.id as u32).await,
+        Player
+    ) {
+        Some(found_player) => found_player,
+        None => {
+            return TypedHttpResponse::return_standard_error(
+                404,
+                MessageResource::new_from_str(
+                    "Could not find player with id. Something went wrong.",
+                ),
+            )
+        }
+    };
     //  Debating in between an empty response with an OK or a more elaborate response with the updated Player.
-    return TypedHttpResponse::return_empty_response(200);
+    return TypedHttpResponse::return_standard_response(200, updated_player);
 }
 //TODO: Verify user phone number
 pub async fn login(
