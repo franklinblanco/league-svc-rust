@@ -6,25 +6,18 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
 use league_types::{domain::place::Place, APP_NAME};
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
-use crate::{
-    dao::{place_dao, player_dao::get_player_with_id},
-    util::repeat_utils::get_from_and_to_from_page,
-};
+use crate::dao::{place_dao, player_dao::get_player_with_id};
 
 pub async fn get_places_for_country_paged(
-    conn: &MySqlPool,
+    conn: &PgPool,
     country: String,
-    page: u16,
+    page: i64,
 ) -> TypedHttpResponse<Vec<Place>> {
-    let page_limits = match get_from_and_to_from_page(page) {
-        Ok(res) => res,
-        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
-    };
 
     let res = unwrap_or_return_handled_error!(
-        place_dao::get_places_with_country_paged(conn, country, page_limits.0, page_limits.1).await,
+        place_dao::get_places_with_country_paged(conn, country, page).await,
         Vec<Place>
     );
     if res.len() > 0 {
@@ -37,17 +30,14 @@ pub async fn get_places_for_country_paged(
 }
 
 pub async fn get_places_for_sport(
-    conn: &MySqlPool,
-    sport_id: u32,
-    page: u16,
+    conn: &PgPool,
+    sport_id: i32,
+    page: i64,
 ) -> TypedHttpResponse<Vec<Place>> {
-    let page_limits = match get_from_and_to_from_page(page) {
-        Ok(res) => res,
-        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
-    };
+
 
     let res = unwrap_or_return_handled_error!(
-        place_dao::get_place_with_sport_id_paged(conn, sport_id, page_limits.0, page_limits.1)
+        place_dao::get_place_with_sport_id_paged(conn, sport_id, page)
             .await,
         Vec<Place>
     );
@@ -61,10 +51,10 @@ pub async fn get_places_for_sport(
 }
 
 pub async fn get_places_near_me(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     mut user_for_auth: UserForAuthenticationDto,
-    page: u16,
+    page: i64,
 ) -> TypedHttpResponse<Vec<Place>> {
     user_for_auth.app = APP_NAME.to_string();
     let user = unwrap_or_return_handled_error!(
@@ -73,7 +63,7 @@ pub async fn get_places_near_me(
         Vec<Place>
     );
     let player = match unwrap_or_return_handled_error!(
-        get_player_with_id(conn, user.id as u32).await,
+        get_player_with_id(conn, user.id as i32).await,
         Vec<Place>
     ) {
         Some(player) => player,
@@ -84,17 +74,13 @@ pub async fn get_places_near_me(
             )
         }
     };
-    let page_limits = match get_from_and_to_from_page(page) {
-        Ok(res) => res,
-        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
-    };
+
 
     let res = unwrap_or_return_handled_error!(
         place_dao::get_places_with_country_paged(
             conn,
             player.country,
-            page_limits.0,
-            page_limits.1
+            page,
         )
         .await,
         Vec<Place>
@@ -108,7 +94,7 @@ pub async fn get_places_near_me(
     )
 }
 
-pub async fn insert_all_places_from_list(conn: &MySqlPool) {
+pub async fn insert_all_places_from_list(conn: &PgPool) {
     let all_places_persisted = match place_dao::get_all_places(conn).await {
         Ok(places) => places,
         Err(e) => panic!("{}", e.error.to_string()),
@@ -120,7 +106,7 @@ pub async fn insert_all_places_from_list(conn: &MySqlPool) {
                 .map(|val| {
                     let mut place = Place::default();
                     place.name = val.get("name").unwrap().as_str().unwrap().to_string();
-                    place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as u32;
+                    place.sport_id = val.get("sport_id").unwrap().as_i64().unwrap() as i32;
                     place.country = val.get("country").unwrap().as_str().unwrap().to_string();
                     place.state = Some(val.get("state").unwrap().as_str().unwrap().to_string());
                     place.city = val.get("city").unwrap().as_str().unwrap().to_string();

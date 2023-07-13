@@ -6,12 +6,12 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
 use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto, APP_NAME};
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 use crate::dao::{player_dao::get_player_with_id, trust_dao};
 
 pub async fn add_trusted_player(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     trust_req: TrustRequestDto,
 ) -> TypedHttpResponse<Trust> {
@@ -37,7 +37,7 @@ pub async fn add_trusted_player(
         }
         None => { /* Do nothing */ }
     };
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Trust) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
         Some(player) => player,
         None => {
             return TypedHttpResponse::return_standard_error(
@@ -70,7 +70,7 @@ pub async fn add_trusted_player(
 }
 
 pub async fn remove_trusted_player(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     trust_req: TrustRequestDto,
 ) -> TypedHttpResponse<Trust> {
@@ -84,7 +84,7 @@ pub async fn remove_trusted_player(
         authenticate_user_with_token(client, &user_for_auth).await,
         Trust
     );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as u32).await, Trust) {
+    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
         Some(player) => player,
         None => {
             return TypedHttpResponse::return_standard_error(

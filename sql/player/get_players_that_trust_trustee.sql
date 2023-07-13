@@ -8,9 +8,9 @@ SELECT p.id,
     p.identification_number,
     p.bio,
     p.profile_picture_url,
-    p.id_verified as "id_verified: _",
-    p.phone_number_verified as "phone_number_verified: _"
+    id_verified,
+    phone_number_verified
 FROM trust t
 INNER JOIN player p ON t.trustee_id = p.id
-WHERE p.id = ?
+WHERE p.id = $1
 ORDER BY time_created DESC;

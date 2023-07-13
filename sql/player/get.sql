@@ -9,7 +9,7 @@ SELECT
     identification_number,
     bio,
     profile_picture_url,
-    id_verified as "id_verified: _",
-    phone_number_verified as "phone_number_verified: _"
+    id_verified,
+    phone_number_verified
 FROM player
-WHERE id = ?;
+WHERE id = $1;

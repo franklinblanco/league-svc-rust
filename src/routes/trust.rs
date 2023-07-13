@@ -7,13 +7,13 @@ use actix_web::{
 use actix_web_utils::extensions::typed_response::TypedHttpResponse;
 use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto};
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 use crate::service::trust;
 
 #[post("")]
 pub async fn add_trusted_player(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     trust_req: Json<TrustRequestDto>,
 ) -> TypedHttpResponse<Trust> {
@@ -22,7 +22,7 @@ pub async fn add_trusted_player(
 
 #[delete("")]
 pub async fn remove_trusted_player(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     trust_req: Json<TrustRequestDto>,
 ) -> TypedHttpResponse<Trust> {

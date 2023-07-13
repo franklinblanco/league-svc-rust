@@ -1,2 +1,2 @@
 SELECT * FROM place 
-where id = ?
+where id = $1

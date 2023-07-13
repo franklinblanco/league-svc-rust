@@ -1,22 +1,22 @@
 use actix_web_utils::{extensions::generic_error::GenericError, wrap_generic_error_in_wrapper};
 use league_types::domain::{dao_utils::Count, trust::Trust};
-use sqlx::{mysql::MySqlQueryResult, MySqlPool};
+use sqlx::{postgres::PgQueryResult, PgPool};
 
 pub async fn insert_trust(
-    conn: &MySqlPool,
+    conn: &PgPool,
     trust: &Trust,
-) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
+) -> Result<PgQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
-        sqlx::query_file!("sql/trust/insert.sql", trust.truster_id, trust.trustee_id)
+        sqlx::query_file!("sql/trust/insert.sql", trust.truster_id, trust.trustee_id, trust.time_created)
             .execute(conn)
             .await
     )
 }
 
 pub async fn get_trust_with_both_ids(
-    conn: &MySqlPool,
-    truster_id: u32,
-    trustee_id: u32,
+    conn: &PgPool,
+    truster_id: i32,
+    trustee_id: i32,
 ) -> Result<Option<Trust>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(Trust, "sql/trust/get.sql", truster_id, trustee_id)
@@ -26,8 +26,8 @@ pub async fn get_trust_with_both_ids(
 }
 //TODO: Check that fetch_one retreived a correct count from db
 pub async fn get_trusts_by_truster_id(
-    conn: &MySqlPool,
-    truster_id: u32,
+    conn: &PgPool,
+    truster_id: i32,
 ) -> Result<Count, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(Count, "sql/trust/get_count_by_truster.sql", truster_id)
@@ -37,8 +37,8 @@ pub async fn get_trusts_by_truster_id(
 }
 //TODO: Check that fetch_one retreived a correct count from db
 pub async fn get_trusts_by_trustee_id(
-    conn: &MySqlPool,
-    trustee_id: u32,
+    conn: &PgPool,
+    trustee_id: i32,
 ) -> Result<Count, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(Count, "sql/trust/get_count_by_trustee.sql", trustee_id)
@@ -48,10 +48,10 @@ pub async fn get_trusts_by_trustee_id(
 }
 
 pub async fn delete_trust_with_both_ids(
-    conn: &MySqlPool,
-    truster_id: u32,
-    trustee_id: u32,
-) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
+    conn: &PgPool,
+    truster_id: i32,
+    trustee_id: i32,
+) -> Result<PgQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file!("sql/trust/delete.sql", truster_id, trustee_id)
             .execute(conn)

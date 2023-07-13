@@ -9,9 +9,9 @@ SELECT
     pl.identification_number,
     pl.bio,
     pl.profile_picture_url,
-    pl.id_verified as "id_verified: _",
-    pl.phone_number_verified as "phone_number_verified: _"
+    pl.id_verified,
+    pl.phone_number_verified
 FROM player pl
 INNER JOIN league_player lp ON
 lp.player_id = pl.id
-WHERE lp.league_id = ?;
+WHERE lp.league_id = $1;

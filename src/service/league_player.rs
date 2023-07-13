@@ -18,16 +18,13 @@ use league_types::{
     APP_NAME,
 };
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
-use crate::{
-    dao::{league_dao, league_player_dao, player_dao, trust_dao},
-    util::repeat_utils::get_from_and_to_from_page,
-};
+use crate::dao::{league_dao, league_player_dao, player_dao, trust_dao};
 
 /// Creates a LeaguePlayer and checks if the league is open or closed
 pub async fn request_to_join_league(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     join_req: JoinRequest,
 ) -> TypedHttpResponse<LeaguePlayer> {
@@ -57,7 +54,7 @@ pub async fn request_to_join_league(
     );
     // Get Player profile
     match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, user.id as u32).await,
+        player_dao::get_player_with_id(conn, user.id as i32).await,
         LeaguePlayer
     ) {
         Some(player) => player,
@@ -141,22 +138,16 @@ pub async fn request_to_join_league(
     };
     // Insert league_player_status into DB
     league_player_to_insert.status = join_request_status.to_string();
-    let last_insert_id = unwrap_or_return_handled_error!(
+    let persisted_league_player = unwrap_or_return_handled_error!(
         league_player_dao::insert_league_player(conn, &league_player_to_insert).await,
         LeaguePlayer
-    )
-    .last_insert_id() as u32;
-    // Return both cases, the ResultingLeaguePlayer
-    unwrap_or_return_handled_error!(
-        500,
-        200,
-        league_player_dao::get_league_player_by_id(conn, last_insert_id).await,
-        LeaguePlayer
     );
+    // Return both cases, the ResultingLeaguePlayer
+    TypedHttpResponse::return_standard_response(200, persisted_league_player)
 }
 
 pub async fn get_league_request_status(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     join_req: JoinRequest,
 ) -> TypedHttpResponse<LeaguePlayer> {
@@ -174,7 +165,7 @@ pub async fn get_league_request_status(
         league_player_dao::get_league_players_by_player_id_and_league_id(
             conn,
             join_req.league_id,
-            user.id as u32
+            user.id as i32
         )
         .await,
         LeaguePlayer
@@ -194,7 +185,7 @@ pub async fn get_league_request_status(
 /// This method is called by the owner of the league to accept or deny
 /// league players.
 pub async fn change_league_request_status(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     new_status: ApprovalStatus,
     join_req: JoinRequest,
@@ -221,7 +212,7 @@ pub async fn change_league_request_status(
         authenticate_user_with_token(client, &user_for_auth).await,
         LeaguePlayer
     );
-    if league.owner_id != user.id as u32 {
+    if league.owner_id != user.id as i32 {
         return TypedHttpResponse::return_standard_error(
             401,
             MessageResource::new_from_str("You don't own this league..."),
@@ -270,10 +261,10 @@ pub async fn change_league_request_status(
 }
 
 pub async fn get_all_leagues_player_has_applied_to(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     join_req: JoinRequest,
-    page: u16,
+    page: i64,
 ) -> TypedHttpResponse<Vec<League>> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
@@ -285,16 +276,11 @@ pub async fn get_all_leagues_player_has_applied_to(
         authenticate_user_with_token(client, &user_for_auth).await,
         Vec<League>
     );
-    let page_limits = match get_from_and_to_from_page(page) {
-        Ok(res) => res,
-        Err(message) => return TypedHttpResponse::return_standard_error(400, message),
-    };
     let resulting_leagues = unwrap_or_return_handled_error!(
         league_dao::get_all_leagues_player_has_applied_to(
             conn,
             join_req.user_id,
-            page_limits.0,
-            page_limits.1
+            page
         )
         .await,
         Vec<League>
@@ -309,7 +295,7 @@ pub async fn get_all_leagues_player_has_applied_to(
 }
 
 pub async fn get_all_players_in_league(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     join_req: JoinRequest,
 ) -> TypedHttpResponse<Vec<Player>> {
@@ -342,7 +328,7 @@ pub async fn get_all_players_in_league(
 }
 
 pub async fn leave_league(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     join_req: JoinRequest,
 ) -> TypedHttpResponse<LeaguePlayer> {
@@ -385,18 +371,10 @@ pub async fn leave_league(
                 }
             };
             let updated_league_player = unwrap_or_return_handled_error!(
-                league_player_dao::get_league_player_by_id(
+                league_player_dao::update_league_player_status(
                     conn,
-                    unwrap_or_return_handled_error!(
-                        league_player_dao::update_league_player_status(
-                            conn,
-                            league_player.id,
-                            &status_to_be_persisted
-                        )
-                        .await,
-                        LeaguePlayer
-                    )
-                    .last_insert_id() as u32,
+                    league_player.id,
+                    &status_to_be_persisted
                 )
                 .await,
                 LeaguePlayer

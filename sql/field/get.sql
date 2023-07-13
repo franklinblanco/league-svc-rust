@@ -1,2 +1,2 @@
 SELECT * FROM field
-WHERE id = ?
+WHERE id = $1

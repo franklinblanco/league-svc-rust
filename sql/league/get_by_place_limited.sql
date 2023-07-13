@@ -1,4 +1,4 @@
 SELECT * FROM league
-WHERE place_id = ? AND visibility <>"Unlisted"
+WHERE place_id = $1 AND visibility = 'Unlisted'
 ORDER BY time_created DESC
-LIMIT ?,?;
+LIMIT $2 OFFSET 25;

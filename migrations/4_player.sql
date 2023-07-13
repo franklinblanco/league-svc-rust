@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS player (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    time_created TIMESTAMP NOT NULL,
-    last_updated TIMESTAMP NOT NULL,
+CREATE TABLE IF NOT EXISTS "player" (
+    id SERIAL PRIMARY KEY,
+    time_created TIMESTAMPTZ NOT NULL,
+    last_updated TIMESTAMPTZ NOT NULL,
     name VARCHAR(255) NOT NULL,
     birth_date DATE NOT NULL,
     country VARCHAR(255) NOT NULL,
@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS player (
     identification_number VARCHAR(255),
     bio VARCHAR(2048),
     profile_picture_url VARCHAR(1024),
-    id_verified TINYINT(1) NOT NULL,
-    phone_number_verified TINYINT(1) NOT NULL
+    id_verified BOOLEAN NOT NULL,
+    phone_number_verified BOOLEAN NOT NULL
 );

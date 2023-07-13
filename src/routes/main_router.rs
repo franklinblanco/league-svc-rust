@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use chrono::Utc;
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 use std::{collections::HashMap, sync::Arc};
 
 use crate::service::{place::insert_all_places_from_list, sport::insert_all_sports_from_list};
@@ -10,7 +10,7 @@ use crate::service::{place::insert_all_places_from_list, sport::insert_all_sport
 use super::{league, league_player, place, player, sport, trust};
 
 ///  This function is to be used in case code is meant to be run after server startup
-pub async fn after_startup_fn(conn: &MySqlPool, start_time: i64) {
+pub async fn after_startup_fn(conn: &PgPool, start_time: i64) {
     insert_all_sports_from_list(conn).await;
     insert_all_places_from_list(conn).await;
     println!("{}", "Finished db updates!");
@@ -22,7 +22,7 @@ pub async fn after_startup_fn(conn: &MySqlPool, start_time: i64) {
 }
 
 pub async fn start_all_routes(
-    db_conn: MySqlPool,
+    db_conn: PgPool,
     env_vars: HashMap<String, String>,
     start_time: i64,
 ) -> Result<(), std::io::Error> {

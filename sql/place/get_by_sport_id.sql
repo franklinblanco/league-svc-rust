@@ -1,4 +1,4 @@
 SELECT * FROM place
-WHERE sport_id = ?
+WHERE sport_id = $1
 ORDER BY time_created DESC
-LIMIT ?,?;
+LIMIT $2 OFFSET 25;

@@ -1,5 +1,5 @@
 SELECT l.* FROM league l
 LEFT JOIN place p ON p.id = l.place_id
-WHERE p.country = ? AND visibility <>"Unlisted"
+WHERE p.country = $1 AND visibility = 'Unlisted'
 ORDER BY l.time_created DESC
-LIMIT ?,?
+LIMIT $2 OFFSET 25;

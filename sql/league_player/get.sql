@@ -1,2 +1,2 @@
 SELECT * FROM league_player
-WHERE id = ?;
+WHERE id = $1;

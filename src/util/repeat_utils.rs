@@ -2,7 +2,7 @@
 
 use err::MessageResource;
 
-const PAGE_SIZE: u32 = 20;
+const PAGE_SIZE: i32 = 20;
 
 /// Get From row and To row for database operations that are paged.
 /// ```
@@ -11,12 +11,12 @@ const PAGE_SIZE: u32 = 20;
 /// assert!(page_tuple.0 == 0);
 /// assert!(page_tuple.1 == 20);
 /// ```
-pub fn get_from_and_to_from_page(page: u16) -> Result<(u32, u32), MessageResource> {
+pub fn get_from_and_to_from_page(page: u16) -> Result<(i32, i32), MessageResource> {
     if page == 0 {
         return Err(MessageResource::new_from_str("Page number cannot be 0."));
     }
     Ok((
-        (((page) as u32 * PAGE_SIZE) - PAGE_SIZE as u32).into(),
-        ((page) as u32 * PAGE_SIZE),
+        (((page) as i32 * PAGE_SIZE) - PAGE_SIZE as i32).into(),
+        ((page) as i32 * PAGE_SIZE),
     ))
 }

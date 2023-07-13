@@ -5,12 +5,12 @@ use actix_web_utils::{
     extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error,
 };
 use league_types::domain::sport::Sport;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 use crate::dao::sport_dao;
 
 #[get("")]
-pub async fn get_all_sports(conn: Data<Arc<MySqlPool>>) -> TypedHttpResponse<Vec<Sport>> {
+pub async fn get_all_sports(conn: Data<Arc<PgPool>>) -> TypedHttpResponse<Vec<Sport>> {
     unwrap_or_return_handled_error!(
         500,
         200,

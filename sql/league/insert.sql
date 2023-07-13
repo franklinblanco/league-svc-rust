@@ -12,18 +12,18 @@ INSERT INTO league (
     currency,
     max_players,
     description
-) VALUES(
+) VALUES (
     NULL,
-    ?,
-    ?,
-    ?,
-    NOW(),
-    NOW(),
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
-)
+    $1,
+    $2,
+    $3,
+    $4,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11
+) RETURNING *;

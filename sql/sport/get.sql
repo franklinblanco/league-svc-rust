@@ -1,2 +1,2 @@
 SELECT * FROM sport
-WHERE id = ?;
+WHERE id = $1;

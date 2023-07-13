@@ -3,24 +3,21 @@ name = "league-svc"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 anyhow = "1"
 tokio = { version = "1.20.1", features = ["full"] }
 dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1" }
-sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls", "mysql", "chrono", "decimal", "offline" ] }
+sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls", "postgres", "chrono", "decimal", "offline" ] }
 actix-web = "4"
 actix-cors = "0.6.2"
 chrono = { version = "0.4", features = [ "serde" ] }
 reqwest = { version = "0.11.11", features = ["rustls-tls", "json"], default-features = false }
-openssl = { version = "0.10.1", features = ["vendored"] }
 
 actix-web-utils = { git = "https://git.franklinblanco.dev/franklinblanco/actix-web-utils.git" }
 err = { git = "https://git.franklinblanco.dev/franklinblanco/err.git" }
-league-types = { git = "https://git.franklinblanco.dev/franklinblanco/league-types.git" }
+league-types = { path = "/Users/franklinblanco/Desktop/Code/rust/libs/dev-deps/league-types" }
 
 dev-dtos = { git = "https://git.franklinblanco.dev/franklinblanco/dev-dtos.git" }
 dev-communicators = { git = "https://git.franklinblanco.dev/franklinblanco/dev-communicators.git" }

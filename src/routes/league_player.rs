@@ -13,13 +13,13 @@ use league_types::{
     dto::league_player::JoinRequest,
 };
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 use crate::service::league_player;
 
 #[post("/request")]
 pub async fn request_to_join_league(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     join_req: Json<JoinRequest>,
 ) -> TypedHttpResponse<LeaguePlayer> {
@@ -27,7 +27,7 @@ pub async fn request_to_join_league(
 }
 #[post("/request/status")]
 pub async fn get_league_request_status(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     join_req: Json<JoinRequest>,
 ) -> TypedHttpResponse<LeaguePlayer> {
@@ -35,7 +35,7 @@ pub async fn get_league_request_status(
 }
 #[put("/request/{status}")]
 pub async fn change_league_request_status(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     new_status: Path<ApprovalStatus>,
     join_req: Json<JoinRequest>,
@@ -45,16 +45,16 @@ pub async fn change_league_request_status(
 }
 #[post("/leagues/{page}")]
 pub async fn get_all_leagues_player_has_applied_to(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     join_req: Json<JoinRequest>,
-    page: Path<u16>,
+    page: Path<i64>,
 ) -> TypedHttpResponse<Vec<League>> {
     league_player::get_all_leagues_player_has_applied_to(&conn, &client, join_req.0, *page).await
 }
 #[post("/players")]
 pub async fn get_all_players_in_league(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     join_req: Json<JoinRequest>,
 ) -> TypedHttpResponse<Vec<Player>> {
@@ -62,7 +62,7 @@ pub async fn get_all_players_in_league(
 }
 #[post("/leave")]
 pub async fn leave_league(
-    conn: Data<Arc<MySqlPool>>,
+    conn: Data<Arc<PgPool>>,
     client: Data<Arc<Client>>,
     join_req: Json<JoinRequest>,
 ) -> TypedHttpResponse<LeaguePlayer> {

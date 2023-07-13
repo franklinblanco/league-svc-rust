@@ -5,9 +5,9 @@ INSERT INTO league_player (
     last_updated,
     status
 ) VALUES (
-    ?,
-    ?,
-    NOW(),
-    NOW(),
-    ?
-);
+    $1,
+    $2,
+    $3,
+    $3,
+    $4
+) RETURNING *;

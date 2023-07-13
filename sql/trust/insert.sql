@@ -4,8 +4,8 @@ INSERT INTO trust (
     time_created,
     last_updated
 ) VALUES (
-    ?,
-    ?,
-    NOW(),
-    NOW()
+    $1,
+    $2,
+    $3,
+    $3
 );

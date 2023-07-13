@@ -5,7 +5,7 @@ pub fn parse_sport_list() -> Vec<Sport> {
     file.split(",\n")
         .enumerate()
         .map(|(index, value)| Sport {
-            id: index as u32,
+            id: index as i32,
             name: String::from(value),
             category_id: 0,
         })

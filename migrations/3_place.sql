@@ -1,9 +1,9 @@
-CREATE TABLE IF NOT EXISTS place (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    time_created TIMESTAMP NOT NULL,
-    last_updated TIMESTAMP NOT NULL,
+CREATE TABLE IF NOT EXISTS "place" (
+    id SERIAL PRIMARY KEY,
+    time_created TIMESTAMPTZ NOT NULL,
+    last_updated TIMESTAMPTZ NOT NULL,
     name VARCHAR(255) NOT NULL,
-    sport_id INT UNSIGNED NOT NULL,
+    sport_id INT NOT NULL,
     country VARCHAR(255) NOT NULL,
     state VARCHAR(255),
     city VARCHAR(255) NOT NULL,

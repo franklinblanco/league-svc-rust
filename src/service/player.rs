@@ -16,7 +16,7 @@ use league_types::{
     APP_NAME,
 };
 use reqwest::Client;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 use crate::{
     dao::{player_dao, trust_dao},
@@ -25,7 +25,7 @@ use crate::{
 
 /// Self explanatory name
 pub async fn create_player_profile(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     player: PlayerForCreationDto,
 ) -> TypedHttpResponse<Token> {
@@ -34,7 +34,7 @@ pub async fn create_player_profile(
     let persisted_token =
         unwrap_or_return_handled_error!(create_user(client, &user_for_creation).await, Token);
     let mut player_to_persist = Player::from(player);
-    player_to_persist.id = persisted_token.user_id as u32;
+    player_to_persist.id = persisted_token.user_id as i32;
     unwrap_or_return_handled_error!(
         500,
         player_dao::insert_player(conn, player_to_persist).await,
@@ -46,7 +46,7 @@ pub async fn create_player_profile(
 
 /// Called to update any detail in the player profile
 pub async fn edit_player_profile(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     player: PlayerForUpdateDto,
 ) -> TypedHttpResponse<Player> {
@@ -64,7 +64,7 @@ pub async fn edit_player_profile(
     );
     //  Attempt to find player in database with the user id that user service gave back
     let persisted_player = match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_user.id as u32).await,
+        player_dao::get_player_with_id(conn, persisted_user.id as i32).await,
         Player
     ) {
         Some(found_player) => found_player,
@@ -87,7 +87,7 @@ pub async fn edit_player_profile(
         Player
     );
     let updated_player = match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_user.id as u32).await,
+        player_dao::get_player_with_id(conn, persisted_user.id as i32).await,
         Player
     ) {
         Some(found_player) => found_player,
@@ -105,7 +105,7 @@ pub async fn edit_player_profile(
 }
 //TODO: Verify user phone number
 pub async fn login(
-    conn: &MySqlPool,
+    conn: &PgPool,
     client: &Client,
     mut user: UserForLoginDto,
 ) -> TypedHttpResponse<Token> {
@@ -116,7 +116,7 @@ pub async fn login(
     );
 
     match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_token.user_id as u32).await,
+        player_dao::get_player_with_id(conn, persisted_token.user_id as i32).await,
         Token
     ) {
         Some(_) => TypedHttpResponse::return_standard_response(200, persisted_token),
@@ -128,8 +128,8 @@ pub async fn login(
 }
 
 pub async fn get_player_profile(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> TypedHttpResponse<PlayerProfileDto> {
     let persisted_player = match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
@@ -166,8 +166,8 @@ pub async fn get_player_profile(
 }
 
 pub async fn get_player_trusted_list(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> TypedHttpResponse<Vec<Player>> {
     match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
@@ -197,8 +197,8 @@ pub async fn get_player_trusted_list(
 }
 
 pub async fn get_player_trusted_by_list(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> TypedHttpResponse<Vec<Player>> {
     match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
@@ -228,7 +228,7 @@ pub async fn get_player_trusted_by_list(
 }
 
 pub async fn get_player_metadata_bulk(
-    conn: &MySqlPool,
+    conn: &PgPool,
     player_ids: PlayerIds,
 ) -> TypedHttpResponse<Vec<PlayerMetadata>> {
     let player_metadata_list = unwrap_or_return_handled_error!(

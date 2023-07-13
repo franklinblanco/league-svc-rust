@@ -1,8 +1,7 @@
--- Add migration script here
-CREATE TABLE IF NOT EXISTS trust (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    truster_id INT UNSIGNED NOT NULL,
-    trustee_id INT UNSIGNED NOT NULL,
-    time_created TIMESTAMP NOT NULL,
-    last_updated TIMESTAMP NOT NULL
+CREATE TABLE IF NOT EXISTS "trust" (
+    id SERIAL PRIMARY KEY,
+    truster_id INT NOT NULL,
+    trustee_id INT NOT NULL,
+    time_created TIMESTAMPTZ NOT NULL,
+    last_updated TIMESTAMPTZ NOT NULL
 );

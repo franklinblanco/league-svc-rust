@@ -1,5 +1,4 @@
 INSERT INTO player (
-    id,
     time_created,
     last_updated,
     name,
@@ -12,16 +11,15 @@ INSERT INTO player (
     id_verified,
     phone_number_verified
 ) VALUES (
-    ?,
-    NOW(),
-    NOW(), 
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    $1,
+    $1, 
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10
 );

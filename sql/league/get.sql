@@ -1,2 +1,2 @@
 SELECT * FROM league
-WHERE id = ?;
+WHERE id = $1;

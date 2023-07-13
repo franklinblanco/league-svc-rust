@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS league_player (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    league_id INT UNSIGNED NOT NULL,
-    player_id INT UNSIGNED NOT NULL,
-    time_created TIMESTAMP NOT NULL,
-    last_updated TIMESTAMP NOT NULL,
+CREATE TABLE IF NOT EXISTS "league_player" (
+    id SERIAL PRIMARY KEY,
+    league_id INT NOT NULL,
+    player_id INT NOT NULL,
+    time_created TIMESTAMPTZ NOT NULL,
+    last_updated TIMESTAMPTZ NOT NULL,
     status VARCHAR(255) NOT NULL
 );

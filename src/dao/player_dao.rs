@@ -1,17 +1,17 @@
 use actix_web_utils::{extensions::generic_error::GenericError, wrap_generic_error_in_wrapper};
 use league_types::{domain::player::Player, dto::player_metadata::PlayerMetadata};
-use sqlx::{mysql::MySqlQueryResult, MySqlPool};
+use sqlx::{postgres::PgQueryResult, PgPool};
 
 use crate::util::from_row::player_metadata_from_row;
 
 pub async fn insert_player(
-    conn: &MySqlPool,
+    conn: &PgPool,
     player: Player,
-) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
+) -> Result<PgQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file!(
             "sql/player/insert.sql",
-            player.id,
+            player.time_created,
             player.name,
             player.birth_date,
             player.country,
@@ -28,8 +28,8 @@ pub async fn insert_player(
 }
 
 pub async fn get_player_with_id(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> Result<Option<Player>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(Player, "sql/player/get.sql", player_id)
@@ -39,12 +39,13 @@ pub async fn get_player_with_id(
 }
 
 pub async fn update_player_with_id(
-    conn: &MySqlPool,
+    conn: &PgPool,
     player: Player,
-) -> Result<MySqlQueryResult, GenericError<sqlx::Error>> {
+) -> Result<PgQueryResult, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file!(
             "sql/player/update.sql",
+            player.last_updated,
             player.name,
             player.birth_date,
             player.country,
@@ -63,8 +64,8 @@ pub async fn update_player_with_id(
 
 //TODO: make this method return LeaguePlayers (because this WILL return players that have been kicked or that are awaiting approval)
 pub async fn get_all_players_in_league(
-    conn: &MySqlPool,
-    league_id: u32,
+    conn: &PgPool,
+    league_id: i32,
 ) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(Player, "sql/player/get_by_league_player.sql", league_id)
@@ -74,8 +75,8 @@ pub async fn get_all_players_in_league(
 }
 
 pub async fn get_all_trusted_players(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(
@@ -89,8 +90,8 @@ pub async fn get_all_trusted_players(
 }
 
 pub async fn get_all_players_that_trust_player(
-    conn: &MySqlPool,
-    player_id: u32,
+    conn: &PgPool,
+    player_id: i32,
 ) -> Result<Vec<Player>, GenericError<sqlx::Error>> {
     wrap_generic_error_in_wrapper!(
         sqlx::query_file_as!(
@@ -104,8 +105,8 @@ pub async fn get_all_players_that_trust_player(
 }
 
 pub async fn get_players_bulk(
-    conn: &MySqlPool,
-    player_ids: Vec<u32>,
+    conn: &PgPool,
+    player_ids: Vec<i32>,
 ) -> Result<Vec<PlayerMetadata>, GenericError<sqlx::Error>> {
     let params = format!("?{}", ", ?".repeat(player_ids.len() - 1));
     let query_str = format!(
