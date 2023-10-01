@@ -1,6 +1,7 @@
 use chrono::Utc;
 use dao::main_dao;
 use util::env_util;
+use crate::dao::main_dao::run_all_migrations;
 
 pub mod dao;
 pub mod routes;
@@ -22,7 +23,7 @@ async fn main() {
     };
 
     //  Run all migrations
-    //run_all_migrations(&mut db_conn).await;
+    run_all_migrations(&db_conn).await;
 
     //  Pass shared state to server and start it
     routes::main_router::start_all_routes(db_conn, env_vars, start_time)

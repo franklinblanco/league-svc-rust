@@ -1,6 +1,4 @@
-use actix_web_utils::{
-    extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error,
-};
+use actix_web_utils::extensions::typed_response::TypedResponse;
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
@@ -11,10 +9,10 @@ use sqlx::PgPool;
 use crate::dao::{player_dao::get_player_with_id, trust_dao};
 
 pub async fn add_trusted_player(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     trust_req: TrustRequestDto,
-) -> TypedHttpResponse<Trust> {
+) -> TypedResponse<Trust> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: trust_req.truster_id.to_string(),
@@ -30,7 +28,7 @@ pub async fn add_trusted_player(
         Trust
     ) {
         Some(_) => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 400,
                 MessageResource::new_from_str("You already trust this player."),
             )
@@ -40,7 +38,7 @@ pub async fn add_trusted_player(
     match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Truster Player profile not found."),
             )
@@ -52,7 +50,7 @@ pub async fn add_trusted_player(
     ) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Trustee Player profile not found."),
             )
@@ -60,20 +58,20 @@ pub async fn add_trusted_player(
     };
     let trust_to_insert = Trust::from(trust_req.clone());
     if trust_req.truster_id == trust_req.trustee_id {
-        return TypedHttpResponse::return_standard_error(
+        return TypedResponse::return_standard_error(
             400,
             MessageResource::new_from_str("You can't trust yourself..."),
         );
     }
     unwrap_or_return_handled_error!(trust_dao::insert_trust(conn, &trust_to_insert).await, Trust);
-    TypedHttpResponse::return_standard_response(200, trust_to_insert)
+    TypedResponse::return_standard_response(200, trust_to_insert)
 }
 
 pub async fn remove_trusted_player(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     trust_req: TrustRequestDto,
-) -> TypedHttpResponse<Trust> {
+) -> TypedResponse<Trust> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: trust_req.truster_id.to_string(),
@@ -87,7 +85,7 @@ pub async fn remove_trusted_player(
     match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Truster Player profile not found."),
             )
@@ -99,7 +97,7 @@ pub async fn remove_trusted_player(
     ) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Trustee Player profile not found."),
             )
@@ -112,10 +110,10 @@ pub async fn remove_trusted_player(
     )
     .rows_affected()
     {
-        0 => TypedHttpResponse::return_standard_error(
+        0 => TypedResponse::return_standard_error(
             404,
             MessageResource::new_from_str("You didn't trust this player in the first place."),
         ),
-        _ => TypedHttpResponse::return_empty_response(200),
+        _ => TypedResponse::return_empty_response(200),
     }
 }

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use actix_web_utils::{
-    extensions::typed_response::TypedHttpResponse, traits::macro_traits::ReturnableErrorShape,
+    extensions::typed_response::TypedResponse, traits::macro_traits::ReturnableErrorShape,
     unwrap_or_return_handled_error,
 };
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
@@ -24,10 +24,10 @@ use crate::dao::{league_dao, league_player_dao, player_dao, trust_dao};
 
 /// Creates a LeaguePlayer and checks if the league is open or closed
 pub async fn request_to_join_league(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedHttpResponse<LeaguePlayer> {
+) -> TypedResponse<LeaguePlayer> {
     // Get league
     let league = match unwrap_or_return_handled_error!(
         league_dao::get_league_with_id(conn, join_req.league_id).await,
@@ -35,7 +35,7 @@ pub async fn request_to_join_league(
     ) {
         Some(league) => league,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("League not found with given id."),
             )
@@ -59,7 +59,7 @@ pub async fn request_to_join_league(
     ) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Player profile not found."),
             )
@@ -89,7 +89,7 @@ pub async fn request_to_join_league(
                 LeaguePlayer
             );
             if persisted_league_player_status.get_status_type() == StatusType::Active {
-                return TypedHttpResponse::return_standard_error(
+                return TypedResponse::return_standard_error(
                     400,
                     MessageResource::new_from_str(
                         "You already have an active join request for this league.",
@@ -111,7 +111,7 @@ pub async fn request_to_join_league(
         // If player has previous inactive LeaguePlayers then don't allow a rejoin.
         LeagueVisibility::Public => match player_has_inactive_persisted_league_players {
             true => {
-                return TypedHttpResponse::return_standard_error(
+                return TypedResponse::return_standard_error(
                     400,
                     MessageResource::new_from_str(
                         "Player has already left or been kicked out of this league.",
@@ -143,14 +143,14 @@ pub async fn request_to_join_league(
         LeaguePlayer
     );
     // Return both cases, the ResultingLeaguePlayer
-    TypedHttpResponse::return_standard_response(200, persisted_league_player)
+    TypedResponse::return_standard_response(200, persisted_league_player)
 }
 
 pub async fn get_league_request_status(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedHttpResponse<LeaguePlayer> {
+) -> TypedResponse<LeaguePlayer> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -173,9 +173,9 @@ pub async fn get_league_request_status(
     .get(0)
     {
         Some(league_player) => {
-            TypedHttpResponse::return_standard_response(200, league_player.clone())
+            TypedResponse::return_standard_response(200, league_player.clone())
         }
-        None => TypedHttpResponse::return_standard_error(
+        None => TypedResponse::return_standard_error(
             404,
             MessageResource::new_from_str("LeaguePlayer not found with given ids."),
         ),
@@ -185,18 +185,18 @@ pub async fn get_league_request_status(
 /// This method is called by the owner of the league to accept or deny
 /// league players.
 pub async fn change_league_request_status(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     new_status: ApprovalStatus,
     join_req: JoinRequest,
-) -> TypedHttpResponse<LeaguePlayer> {
+) -> TypedResponse<LeaguePlayer> {
     let league = match unwrap_or_return_handled_error!(
         league_dao::get_league_with_id(conn, join_req.league_id).await,
         LeaguePlayer
     ) {
         Some(league) => league,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("League not found with given id."),
             )
@@ -213,7 +213,7 @@ pub async fn change_league_request_status(
         LeaguePlayer
     );
     if league.owner_id != user.id as i32 {
-        return TypedHttpResponse::return_standard_error(
+        return TypedResponse::return_standard_error(
             401,
             MessageResource::new_from_str("You don't own this league..."),
         );
@@ -229,7 +229,7 @@ pub async fn change_league_request_status(
     );
 
     if persisted_league_players.is_empty() {
-        return TypedHttpResponse::return_standard_error(
+        return TypedResponse::return_standard_error(
             404,
             MessageResource::new_from_str("No LeaguePlayer found with given ids."),
         );
@@ -247,7 +247,7 @@ pub async fn change_league_request_status(
                 .await,
                 LeaguePlayer
             );
-            return TypedHttpResponse::return_standard_response(
+            return TypedResponse::return_standard_response(
                 200,
                 unwrap_or_return_handled_error!(
                     league_player_dao::get_league_player_by_id(conn, league_player_to_persist.id)
@@ -261,11 +261,11 @@ pub async fn change_league_request_status(
 }
 
 pub async fn get_all_leagues_player_has_applied_to(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
     page: i64,
-) -> TypedHttpResponse<Vec<League>> {
+) -> TypedResponse<Vec<League>> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -286,19 +286,19 @@ pub async fn get_all_leagues_player_has_applied_to(
         Vec<League>
     );
     if resulting_leagues.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, resulting_leagues);
+        return TypedResponse::return_standard_response(200, resulting_leagues);
     }
-    return TypedHttpResponse::return_standard_error(
+    return TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No leagues found with player join requests."),
     );
 }
 
 pub async fn get_all_players_in_league(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedHttpResponse<Vec<Player>> {
+) -> TypedResponse<Vec<Player>> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -317,9 +317,9 @@ pub async fn get_all_players_in_league(
     .map(|player| player.clear_all_sensitive_fields())
     .collect();
     if resulting_players.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, resulting_players);
+        return TypedResponse::return_standard_response(200, resulting_players);
     }
-    return TypedHttpResponse::return_standard_error(
+    return TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str(
             "No players found with join requests to the league specified.",
@@ -328,10 +328,10 @@ pub async fn get_all_players_in_league(
 }
 
 pub async fn leave_league(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedHttpResponse<LeaguePlayer> {
+) -> TypedResponse<LeaguePlayer> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -364,7 +364,7 @@ pub async fn leave_league(
                 LeaguePlayerStatus::Requested => LeaguePlayerStatus::Canceled,
                 LeaguePlayerStatus::Invited => LeaguePlayerStatus::Canceled,
                 _ => {
-                    return TypedHttpResponse::return_standard_error(
+                    return TypedResponse::return_standard_error(
                         500,
                         MessageResource::new_from_str("Something went wrong."),
                     )
@@ -379,14 +379,14 @@ pub async fn leave_league(
                 .await,
                 LeaguePlayer
             );
-            return TypedHttpResponse::return_standard_response(200, updated_league_player);
+            return TypedResponse::return_standard_response(200, updated_league_player);
         }
     }
     println!(
         "Player tried to leave without having active leagues... LeaguePlayers: {:#?}",
         league_players
     );
-    return TypedHttpResponse::return_standard_error(
+    return TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str(
             "No players found with active join requests to the league specified.",
@@ -401,9 +401,9 @@ pub async fn leave_league(
 fn attempt_league_request_status_change(
     persisted_league_players: &Vec<LeaguePlayer>,
     new_status: ApprovalStatus,
-) -> Result<(LeaguePlayerStatus, usize), TypedHttpResponse<LeaguePlayer>> {
-    let mut last_error: TypedHttpResponse<LeaguePlayer> =
-        TypedHttpResponse::return_empty_response(400);
+) -> Result<(LeaguePlayerStatus, usize), TypedResponse<LeaguePlayer>> {
+    let mut last_error: TypedResponse<LeaguePlayer> =
+        TypedResponse::return_empty_response(400);
 
     for (index, persisted_league_player) in persisted_league_players.iter().enumerate() {
         let persisted_status = match persisted_league_player.status.parse::<LeaguePlayerStatus>() {
@@ -415,7 +415,7 @@ fn attempt_league_request_status_change(
                 if persisted_status == LeaguePlayerStatus::Requested {
                     return Ok((LeaguePlayerStatus::Joined, index));
                 } else {
-                    last_error = TypedHttpResponse::return_standard_error(
+                    last_error = TypedResponse::return_standard_error(
                         400,
                         MessageResource::new_from_str(
                             "Cannot approve LeaguePlayer with non-approvable status.",
@@ -431,7 +431,7 @@ fn attempt_league_request_status_change(
                     }
                     LeaguePlayerStatus::Invited => return Ok((LeaguePlayerStatus::Denied, index)),
                     _ => {
-                        last_error = TypedHttpResponse::return_standard_error(
+                        last_error = TypedResponse::return_standard_error(
                             400,
                             MessageResource::new_from_str(
                                 "Cannot deny LeaguePlayer with non-deniable status.",

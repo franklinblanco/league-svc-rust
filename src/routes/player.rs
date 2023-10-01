@@ -5,9 +5,7 @@ use actix_web::{
     web::{self, Json, Path},
     HttpRequest,
 };
-use actix_web_utils::extensions::typed_response::TypedHttpResponse;
-use dev_dtos::{domain::user::token::Token, dtos::user::user_dtos::UserForLoginDto};
-use dev_macros::authenticate_route;
+use actix_web_utils::extensions::typed_response::TypedResponse;
 use league_types::{
     domain::player::Player,
     dto::{
@@ -17,6 +15,7 @@ use league_types::{
 };
 use reqwest::Client;
 use sqlx::PgPool;
+use user_lib::domain::token::Token;
 
 use crate::service::player;
 
@@ -25,7 +24,7 @@ pub async fn create_player_profile(
     db_conn: web::Data<Arc<PgPool>>,
     client: web::Data<Arc<Client>>,
     player: Json<PlayerForCreationDto>,
-) -> TypedHttpResponse<Token> {
+) -> TypedResponse<Token> {
     player::create_player_profile(&db_conn, &client, player.0).await
 }
 
@@ -34,7 +33,7 @@ pub async fn edit_player_profile(
     db_conn: web::Data<Arc<PgPool>>,
     client: web::Data<Arc<Client>>,
     player: Json<PlayerForUpdateDto>,
-) -> TypedHttpResponse<Player> {
+) -> TypedResponse<Player> {
     player::edit_player_profile(&db_conn, &client, player.0).await
 }
 
@@ -42,8 +41,8 @@ pub async fn edit_player_profile(
 pub async fn login(
     db_conn: web::Data<Arc<PgPool>>,
     client: web::Data<Arc<Client>>,
-    user: Json<UserForLoginDto>,
-) -> TypedHttpResponse<Token> {
+    user: Json<PlayerForLoginDto>,
+) -> TypedResponse<Token> {
     player::login(&db_conn, &client, user.0).await
 }
 
@@ -51,7 +50,7 @@ pub async fn login(
 pub async fn get_player_profile(
     db_conn: web::Data<Arc<PgPool>>,
     player_id: Path<i32>,
-) -> TypedHttpResponse<PlayerProfileDto> {
+) -> TypedResponse<PlayerProfileDto> {
     player::get_player_profile(&db_conn, *player_id).await
 }
 
@@ -59,7 +58,7 @@ pub async fn get_player_profile(
 pub async fn get_player_trusted_list(
     db_conn: web::Data<Arc<PgPool>>,
     player_id: Path<i32>,
-) -> TypedHttpResponse<Vec<Player>> {
+) -> TypedResponse<Vec<Player>> {
     player::get_player_trusted_list(&db_conn, *player_id).await
 }
 
@@ -67,7 +66,7 @@ pub async fn get_player_trusted_list(
 pub async fn get_player_trusted_by_list(
     db_conn: web::Data<Arc<PgPool>>,
     player_id: Path<i32>,
-) -> TypedHttpResponse<Vec<Player>> {
+) -> TypedResponse<Vec<Player>> {
     player::get_player_trusted_by_list(&db_conn, *player_id).await
 }
 //TODO: Verify phone number (prefferably in user-svc)
@@ -80,7 +79,7 @@ pub async fn get_player_metadata_bulk(
     client: web::Data<Arc<Client>>,
     ids: web::Json<PlayerIds>,
     request: HttpRequest,
-) -> TypedHttpResponse<Vec<PlayerMetadata>> {
-    authenticate_route!(request, &client);
+) -> TypedResponse<Vec<PlayerMetadata>> {
+    //authenticate_route!(request, &client);
     player::get_player_metadata_bulk(&db_conn, ids.0).await
 }

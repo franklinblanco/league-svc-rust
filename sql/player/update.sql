@@ -9,4 +9,4 @@ UPDATE player SET
     profile_picture_url = $8,
     id_verified = $9,
     phone_number_verified = $10
-WHERE id = $11;
+WHERE id = $11 RETURNING *;

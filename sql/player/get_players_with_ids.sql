@@ -1,0 +1,1 @@
+SELECT * FROM player WHERE id = ANY($1);

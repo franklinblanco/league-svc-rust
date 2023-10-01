@@ -10,4 +10,4 @@ UPDATE league SET
     currency = $9,
     max_players = $10,
     description = $11
-WHERE id = $12;
+WHERE id = $12 RETURNING *;

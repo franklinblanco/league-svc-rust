@@ -1,5 +1,5 @@
 use actix_web_utils::{
-    extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error,
+    extensions::typed_response::TypedResponse, unwrap_or_return_handled_error,
 };
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
@@ -11,29 +11,29 @@ use sqlx::PgPool;
 use crate::dao::{place_dao, player_dao::get_player_with_id};
 
 pub async fn get_places_for_country_paged(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     country: String,
     page: i64,
-) -> TypedHttpResponse<Vec<Place>> {
+) -> TypedResponse<Vec<Place>> {
 
     let res = unwrap_or_return_handled_error!(
         place_dao::get_places_with_country_paged(conn, country, page).await,
         Vec<Place>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No places found for your country."),
     )
 }
 
 pub async fn get_places_for_sport(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     sport_id: i32,
     page: i64,
-) -> TypedHttpResponse<Vec<Place>> {
+) -> TypedResponse<Vec<Place>> {
 
 
     let res = unwrap_or_return_handled_error!(
@@ -42,20 +42,20 @@ pub async fn get_places_for_sport(
         Vec<Place>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No places found for your country."),
     )
 }
 
 pub async fn get_places_near_me(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     mut user_for_auth: UserForAuthenticationDto,
     page: i64,
-) -> TypedHttpResponse<Vec<Place>> {
+) -> TypedResponse<Vec<Place>> {
     user_for_auth.app = APP_NAME.to_string();
     let user = unwrap_or_return_handled_error!(
         401,
@@ -68,7 +68,7 @@ pub async fn get_places_near_me(
     ) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Player profile not found."),
             )
@@ -86,15 +86,15 @@ pub async fn get_places_near_me(
         Vec<Place>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No places found for your country."),
     )
 }
 
-pub async fn insert_all_places_from_list(conn: &PgPool) {
+pub async fn insert_all_places_from_list(conn: &mut PgConnection,) {
     let all_places_persisted = match place_dao::get_all_places(conn).await {
         Ok(places) => places,
         Err(e) => panic!("{}", e.error.to_string()),

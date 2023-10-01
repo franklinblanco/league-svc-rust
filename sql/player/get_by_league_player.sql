@@ -14,4 +14,4 @@ SELECT
 FROM player pl
 INNER JOIN league_player lp ON
 lp.player_id = pl.id
-WHERE lp.league_id = $1;
+WHERE lp.league_id = $1 AND lp.status = $2;

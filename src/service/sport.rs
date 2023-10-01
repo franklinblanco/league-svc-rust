@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::{dao::sport_dao, util::text_serializer};
 
-pub async fn insert_all_sports_from_list(conn: &PgPool) {
+pub async fn insert_all_sports_from_list(conn: &mut PgConnection,) {
     // This adds a lot of time to the startup. Find a way to cancel it maybe?
     let persisted_sports = match sport_dao::get_all_sports_ordered(conn).await {
         Ok(sports) => sports,

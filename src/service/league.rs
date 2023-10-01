@@ -1,5 +1,5 @@
 use actix_web_utils::{
-    extensions::typed_response::TypedHttpResponse, unwrap_or_return_handled_error,
+    extensions::typed_response::TypedResponse, unwrap_or_return_handled_error,
 };
 use chrono::Utc;
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
@@ -17,10 +17,10 @@ use crate::
 
 /// Create a league.
 pub async fn create_league(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     league: LeagueForCreationDto,
-) -> TypedHttpResponse<League> {
+) -> TypedResponse<League> {
     let user_auth_dto = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: league.user_id.to_string(),
@@ -36,7 +36,7 @@ pub async fn create_league(
     match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, League) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Player profile not found."),
             )
@@ -45,15 +45,15 @@ pub async fn create_league(
 
     // TODO: Validation: League time must be in the future
     // TODO: Validate user doesn't have more than 10 leagues open?
-    TypedHttpResponse::return_standard_response(200, 
+    TypedResponse::return_standard_response(200, 
         unwrap_or_return_handled_error!(insert_league(conn, League::from(league)).await, League))
 }
 
 /// Used to get a specific league
-pub async fn get_league(conn: &PgPool, id: i32) -> TypedHttpResponse<League> {
+pub async fn get_league(conn: &mut PgConnection, id: i32) -> TypedResponse<League> {
     match unwrap_or_return_handled_error!(get_league_with_id(conn, id).await, League) {
-        Some(league) => TypedHttpResponse::return_standard_response(200, league),
-        None => TypedHttpResponse::return_standard_error(
+        Some(league) => TypedResponse::return_standard_response(200, league),
+        None => TypedResponse::return_standard_error(
             404,
             MessageResource::new_from_str("League not found."),
         ),
@@ -62,11 +62,11 @@ pub async fn get_league(conn: &PgPool, id: i32) -> TypedHttpResponse<League> {
 
 /// This route infers the player's area by his country & city.
 pub async fn get_open_leagues_in_my_area(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
     page: i64,
-) -> TypedHttpResponse<Vec<League>> {
+) -> TypedResponse<Vec<League>> {
     let user = unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -78,7 +78,7 @@ pub async fn get_open_leagues_in_my_area(
     ) {
         Some(player) => player,
         None => {
-            return TypedHttpResponse::return_standard_error(
+            return TypedResponse::return_standard_error(
                 404,
                 MessageResource::new_from_str("Player profile not found."),
             )
@@ -90,9 +90,9 @@ pub async fn get_open_leagues_in_my_area(
         Vec<League>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No leagues found for your country."),
     )
@@ -100,19 +100,19 @@ pub async fn get_open_leagues_in_my_area(
 
 /// This route is used to get leagues from a country
 pub async fn get_leagues_in_country(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     country: &String,
     page: i64,
-) -> TypedHttpResponse<Vec<League>> {
+) -> TypedResponse<Vec<League>> {
     let res = unwrap_or_return_handled_error!(
         get_leagues_by_country_limited_to(conn, country.clone(), page)
             .await,
         Vec<League>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No leagues found for country."),
     )
@@ -120,18 +120,18 @@ pub async fn get_leagues_in_country(
 
 /// This route is used to get leagues from a country
 pub async fn get_leagues_in_place(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     place_id: i32,
     page: i64,
-) -> TypedHttpResponse<Vec<League>> {
+) -> TypedResponse<Vec<League>> {
     let res = unwrap_or_return_handled_error!(
         get_leagues_by_in_place_limited_to(conn, place_id, page).await,
         Vec<League>
     );
     if res.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, res);
+        return TypedResponse::return_standard_response(200, res);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No leagues found for place."),
     )
@@ -139,12 +139,12 @@ pub async fn get_leagues_in_place(
 
 /// Only shows non unlisted leagues //TODO: Make a new endpoint to get MyLeagues (Only callable by the owner)
 pub async fn get_leagues_hosted_by_player(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
     player_id: i32,
     page: i64,
-) -> TypedHttpResponse<Vec<League>> {
+) -> TypedResponse<Vec<League>> {
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -156,20 +156,20 @@ pub async fn get_leagues_hosted_by_player(
         Vec<League>
     );
     if leagues.len() > 0 {
-        return TypedHttpResponse::return_standard_response(200, leagues);
+        return TypedResponse::return_standard_response(200, leagues);
     }
-    TypedHttpResponse::return_standard_error(
+    TypedResponse::return_standard_error(
         404,
         MessageResource::new_from_str("No leagues found for place."),
     )
 }
 
 pub async fn get_average_league_age(
-    conn: &PgPool,
+    conn: &mut PgConnection,
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
     league_id: i32,
-) -> TypedHttpResponse<u8> {
+) -> TypedResponse<u8> {
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -189,5 +189,5 @@ pub async fn get_average_league_age(
                 / 365) as u8;
         amount += 1;
     }
-    TypedHttpResponse::return_standard_response(200, age_total / amount)
+    TypedResponse::return_standard_response(200, age_total / amount)
 }

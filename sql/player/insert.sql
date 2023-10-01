@@ -22,4 +22,5 @@ INSERT INTO player (
     $8,
     $9,
     $10
-);
+)
+RETURNING *;

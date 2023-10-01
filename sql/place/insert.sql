@@ -22,4 +22,4 @@ INSERT INTO place (
     $8,
     $9,
     $10
-);
+) RETURNING *;

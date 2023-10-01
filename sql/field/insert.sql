@@ -18,4 +18,4 @@ INSERT INTO field (
     $6,
     $7,
     $8
-);
+) RETURNING *;

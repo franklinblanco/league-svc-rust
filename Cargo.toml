@@ -9,16 +9,18 @@ tokio = { version = "1.20.1", features = ["full"] }
 dotenv = "0.15.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1" }
-sqlx = { version = "0.6.2", features = [ "runtime-tokio-rustls", "postgres", "chrono", "decimal", "offline" ] }
+sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "chrono" ] }
 actix-web = "4"
 actix-cors = "0.6.2"
 chrono = { version = "0.4", features = [ "serde" ] }
 reqwest = { version = "0.11.11", features = ["rustls-tls", "json"], default-features = false }
 
-actix-web-utils = { git = "https://git.franklinblanco.dev/franklinblanco/actix-web-utils.git" }
+actix-web-utils = { path = "/Users/franklinblanco/Desktop/Code/rust/libs/actix-web-addons" }
 err = { git = "https://git.franklinblanco.dev/franklinblanco/err.git" }
 league-types = { path = "/Users/franklinblanco/Desktop/Code/rust/libs/dev-deps/league-types" }
 
-dev-dtos = { git = "https://git.franklinblanco.dev/franklinblanco/dev-dtos.git" }
-dev-communicators = { git = "https://git.franklinblanco.dev/franklinblanco/dev-communicators.git" }
-dev-macros = { git = "https://git.franklinblanco.dev/franklinblanco/dev-macros.git" }
+#dev-macros = { git = "https://git.franklinblanco.dev/franklinblanco/dev-macros.git" }
+
+user-lib = { path = "../../../../Developer/repos/libs/user-lib" }
+log = "0.4.19"
+pretty_env_logger = "0.5.0"

@@ -7,4 +7,4 @@ UPDATE field SET
     price_per_hour = $6,
     currency = $7,
     description = $8
-WHERE id = $9
+WHERE id = $9 RETURNING *;

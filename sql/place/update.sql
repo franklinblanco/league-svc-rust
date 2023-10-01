@@ -9,4 +9,4 @@ UPDATE place SET
     maps_url = $8,
     contact_number = $9,
     picture_url = $10
-WHERE id = $11
+WHERE id = $11 RETURNING *;
