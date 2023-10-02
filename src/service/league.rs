@@ -7,7 +7,7 @@ use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
 use league_types::{domain::league::League, dto::league::LeagueForCreationDto, APP_NAME};
 use reqwest::Client;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgConnection};
 
 use crate::
     dao::{
@@ -20,7 +20,8 @@ pub async fn create_league(
     conn: &mut PgConnection,
     client: &Client,
     league: LeagueForCreationDto,
-) -> TypedResponse<League> {
+    user_id: i32,
+) -> ServiceResponse<League> {
     let user_auth_dto = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: league.user_id.to_string(),
@@ -50,7 +51,7 @@ pub async fn create_league(
 }
 
 /// Used to get a specific league
-pub async fn get_league(conn: &mut PgConnection, id: i32) -> TypedResponse<League> {
+pub async fn get_league(conn: &mut PgConnection, id: i32, user_id: i32) -> ServiceResponse<League> {
     match unwrap_or_return_handled_error!(get_league_with_id(conn, id).await, League) {
         Some(league) => TypedResponse::return_standard_response(200, league),
         None => TypedResponse::return_standard_error(
@@ -66,7 +67,8 @@ pub async fn get_open_leagues_in_my_area(
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
     page: i64,
-) -> TypedResponse<Vec<League>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<League>> {
     let user = unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -103,7 +105,8 @@ pub async fn get_leagues_in_country(
     conn: &mut PgConnection,
     country: &String,
     page: i64,
-) -> TypedResponse<Vec<League>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<League>> {
     let res = unwrap_or_return_handled_error!(
         get_leagues_by_country_limited_to(conn, country.clone(), page)
             .await,
@@ -123,7 +126,8 @@ pub async fn get_leagues_in_place(
     conn: &mut PgConnection,
     place_id: i32,
     page: i64,
-) -> TypedResponse<Vec<League>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<League>> {
     let res = unwrap_or_return_handled_error!(
         get_leagues_by_in_place_limited_to(conn, place_id, page).await,
         Vec<League>
@@ -142,9 +146,9 @@ pub async fn get_leagues_hosted_by_player(
     conn: &mut PgConnection,
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
-    player_id: i32,
     page: i64,
-) -> TypedResponse<Vec<League>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<League>> {
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,
@@ -169,7 +173,8 @@ pub async fn get_average_league_age(
     client: &Client,
     user_for_auth: UserForAuthenticationDto,
     league_id: i32,
-) -> TypedResponse<u8> {
+    user_id: i32,
+) -> ServiceResponse<u8> {
     unwrap_or_return_handled_error!(
         401,
         authenticate_user_with_token(client, &user_for_auth).await,

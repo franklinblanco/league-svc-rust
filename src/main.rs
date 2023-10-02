@@ -21,7 +21,7 @@ async fn main() {
         Ok(conn) => conn,
         Err(e) => panic!("Failure starting the database. Reason: {}", e),
     };
-
+    
     //  Run all migrations
     run_all_migrations(&db_conn).await;
 

@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{get, web::Data};
-use actix_web_utils::{
-    extensions::typed_response::TypedResponse, unwrap_or_return_handled_error,
-};
+use actix_web_utils::extensions::typed_response::TypedResponse;
 use league_types::domain::sport::Sport;
 use sqlx::PgPool;
 

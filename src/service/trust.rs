@@ -12,7 +12,7 @@ pub async fn add_trusted_player(
     conn: &mut PgConnection,
     client: &Client,
     trust_req: TrustRequestDto,
-) -> TypedResponse<Trust> {
+) -> ServiceResponse<Trust> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: trust_req.truster_id.to_string(),
@@ -71,7 +71,7 @@ pub async fn remove_trusted_player(
     conn: &mut PgConnection,
     client: &Client,
     trust_req: TrustRequestDto,
-) -> TypedResponse<Trust> {
+) -> ServiceResponse<Trust> {
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_string(),
         id: trust_req.truster_id.to_string(),

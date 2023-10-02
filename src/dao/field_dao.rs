@@ -5,21 +5,20 @@ pub async fn insert_field(
     conn: &mut PgConnection,
     field: Field,
 ) -> Result<Field, sqlx::Error> {
-    
-        sqlx::query_file_as!(
-            Field,
-            "sql/field/insert.sql",
-            field.place_id,
-            field.time_created,
-            field.country,
-            field.city,
-            field.name,
-            field.price_per_hour,
-            field.currency,
-            field.description
-        )
-        .fetch_one(conn)
-        .await
+    sqlx::query_file_as!(
+        Field,
+        "sql/field/insert.sql",
+        field.place_id,
+        field.time_created,
+        field.country,
+        field.city,
+        field.name,
+        field.price_per_hour,
+        field.currency,
+        field.description
+    )
+    .fetch_one(conn)
+    .await
 }
 
 pub async fn get_field_with_id(

@@ -1,12 +1,5 @@
-use std::str::FromStr;
-
-use actix_web_utils::{
-    extensions::typed_response::TypedResponse, traits::macro_traits::ReturnableErrorShape,
-    unwrap_or_return_handled_error,
-};
-use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
-use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
-use err::MessageResource;
+use actix_web_utils::{extensions::typed_response::TypedResponse, ServiceResponse, x_u_res_db_or_sr, service_error, x_u_res_or_sr};
+use err::{MessageResource, Error, trace, ErrorType, ServiceError as SE};
 use league_types::{
     domain::{
         enums::league_player_status::{ApprovalStatus, LeaguePlayerStatus, StatusType},
@@ -15,67 +8,42 @@ use league_types::{
         player::Player,
     },
     dto::league_player::JoinRequest,
-    APP_NAME,
 };
 use reqwest::Client;
-use sqlx::PgPool;
+use sqlx::PgConnection;
 
 use crate::dao::{league_dao, league_player_dao, player_dao, trust_dao};
 
 /// Creates a LeaguePlayer and checks if the league is open or closed
 pub async fn request_to_join_league(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     join_req: JoinRequest,
-) -> TypedResponse<LeaguePlayer> {
+    user_id: i32,
+) -> ServiceResponse<LeaguePlayer> {
     // Get league
-    let league = match unwrap_or_return_handled_error!(
-        league_dao::get_league_with_id(conn, join_req.league_id).await,
-        LeaguePlayer
+    let league = match x_u_res_db_or_sr!(
+        league_dao::get_league_with_id(transaction, join_req.league_id).await
     ) {
         Some(league) => league,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("League not found with given id."),
-            )
-        }
+        None => return service_error!(404, SE::NotFoundError("No league found with that ID".into())),
     };
-    // Authenticate user
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: join_req.user_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        LeaguePlayer
-    );
     // Get Player profile
-    match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, user.id as i32).await,
-        LeaguePlayer
+    match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, user_id).await
     ) {
         Some(player) => player,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Player profile not found."),
-            )
-        }
+        None => return service_error!(404, SE::NotFoundError("Player profile not found.".into()))
     };
     // Build LeaguePlayer
-    let mut league_player_to_insert = LeaguePlayer::from(join_req);
+    let mut league_player_to_insert = LeaguePlayer::from_join_req(join_req, user_id);
     // Get existing league players if any
-    let persisted_league_players = unwrap_or_return_handled_error!(
+    let persisted_league_players = x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
-            conn,
+            transaction,
             league_player_to_insert.league_id,
             league_player_to_insert.player_id
         )
-        .await,
-        LeaguePlayer
+        .await
     );
     let mut player_has_inactive_persisted_league_players: bool = false;
     // Check if there are league players
@@ -84,52 +52,31 @@ pub async fn request_to_join_league(
         // And check if there are any active ones.
         for persisted_league_player in persisted_league_players {
             // Parse league player status into enum
-            let persisted_league_player_status = unwrap_or_return_handled_error!(
-                persisted_league_player.status.parse::<LeaguePlayerStatus>(),
-                LeaguePlayer
-            );
+            let persisted_league_player_status = persisted_league_player.status;
             if persisted_league_player_status.get_status_type() == StatusType::Active {
-                return TypedResponse::return_standard_error(
-                    400,
-                    MessageResource::new_from_str(
-                        "You already have an active join request for this league.",
-                    ),
-                );
+                return service_error!(400, SE::AlreadyExistsError("You already have an active join request for this league.".into()));
             }
             player_has_inactive_persisted_league_players = true;
         }
     }
-    // Parse LeagueVisibility of league to determine what to do.
-    // Then match LeagueVisibility
+    // Match LeagueVisibility
     // Public -> Join (If player hasn't left before) Private -> Trust model
     // Unlisted will deny a player right away
-    let join_request_status = match unwrap_or_return_handled_error!(
-        400,
-        league.visibility.parse::<LeagueVisibility>(),
-        LeaguePlayer
-    ) {
+    let join_request_status = match league.visibility {
         // If player has previous inactive LeaguePlayers then don't allow a rejoin.
         LeagueVisibility::Public => match player_has_inactive_persisted_league_players {
-            true => {
-                return TypedResponse::return_standard_error(
-                    400,
-                    MessageResource::new_from_str(
-                        "Player has already left or been kicked out of this league.",
-                    ),
-                )
-            }
+            true => return service_error!(400, SE::AlreadyExistsError("Player has already left or been kicked out of this league.".into())),
             false => LeaguePlayerStatus::Joined,
         },
         // If player is trusted then Join the league.
         // If player isn't trusted then request to join the league.
-        LeagueVisibility::Private => match unwrap_or_return_handled_error!(
+        LeagueVisibility::Private => match x_u_res_db_or_sr!(
             trust_dao::get_trust_with_both_ids(
-                conn,
+                transaction,
                 league.owner_id,
                 league_player_to_insert.player_id
             )
-            .await,
-            LeaguePlayer
+            .await
         ) {
             Some(_) => LeaguePlayerStatus::Joined,
             None => LeaguePlayerStatus::Requested,
@@ -137,20 +84,21 @@ pub async fn request_to_join_league(
         LeagueVisibility::Unlisted => LeaguePlayerStatus::Denied,
     };
     // Insert league_player_status into DB
-    league_player_to_insert.status = join_request_status.to_string();
-    let persisted_league_player = unwrap_or_return_handled_error!(
-        league_player_dao::insert_league_player(conn, &league_player_to_insert).await,
-        LeaguePlayer
+    league_player_to_insert.status = join_request_status;
+    let persisted_league_player = x_u_res_db_or_sr!(
+        league_player_dao::insert_league_player(transaction, &league_player_to_insert).await
     );
     // Return both cases, the ResultingLeaguePlayer
-    TypedResponse::return_standard_response(200, persisted_league_player)
+    Ok(persisted_league_player)
 }
 
 pub async fn get_league_request_status(
     conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedResponse<LeaguePlayer> {
+    user_id: i32,
+) -> ServiceResponse<LeaguePlayer> {
+    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -189,7 +137,9 @@ pub async fn change_league_request_status(
     client: &Client,
     new_status: ApprovalStatus,
     join_req: JoinRequest,
-) -> TypedResponse<LeaguePlayer> {
+    user_id: i32,
+) -> ServiceResponse<LeaguePlayer> {
+    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
     let league = match unwrap_or_return_handled_error!(
         league_dao::get_league_with_id(conn, join_req.league_id).await,
         LeaguePlayer
@@ -265,7 +215,9 @@ pub async fn get_all_leagues_player_has_applied_to(
     client: &Client,
     join_req: JoinRequest,
     page: i64,
-) -> TypedResponse<Vec<League>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<League>> {
+    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -298,7 +250,9 @@ pub async fn get_all_players_in_league(
     conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedResponse<Vec<Player>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<Player>> {
+    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -331,7 +285,9 @@ pub async fn leave_league(
     conn: &mut PgConnection,
     client: &Client,
     join_req: JoinRequest,
-) -> TypedResponse<LeaguePlayer> {
+    user_id: i32,
+) -> ServiceResponse<LeaguePlayer> {
+    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
     let user_for_auth = UserForAuthenticationDto {
         app: APP_NAME.to_owned(),
         id: join_req.user_id.to_string(),
@@ -401,8 +357,8 @@ pub async fn leave_league(
 fn attempt_league_request_status_change(
     persisted_league_players: &Vec<LeaguePlayer>,
     new_status: ApprovalStatus,
-) -> Result<(LeaguePlayerStatus, usize), TypedResponse<LeaguePlayer>> {
-    let mut last_error: TypedResponse<LeaguePlayer> =
+) -> Result<(LeaguePlayerStatus, usize), ServiceResponse<LeaguePlayer>> {
+    let mut last_error: ServiceResponse<LeaguePlayer> =
         TypedResponse::return_empty_response(400);
 
     for (index, persisted_league_player) in persisted_league_players.iter().enumerate() {

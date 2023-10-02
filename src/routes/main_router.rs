@@ -10,7 +10,7 @@ use crate::service::{place::insert_all_places_from_list, sport::insert_all_sport
 use super::{league, league_player, place, player, sport, trust};
 
 ///  This function is to be used in case code is meant to be run after server startup
-pub async fn after_startup_fn(conn: &mut PgConnection, start_time: i64) {
+pub async fn after_startup_fn(conn: &PgPool, start_time: i64) {
     insert_all_sports_from_list(conn).await;
     insert_all_places_from_list(conn).await;
     println!("{}", "Finished db updates!");

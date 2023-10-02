@@ -10,4 +10,10 @@ INSERT INTO league_player (
     $3,
     $3,
     $4
-) RETURNING *;
+) RETURNING 
+    id,
+    league_id,
+    player_id,
+    time_created,
+    last_updated,
+    status as "status: _";

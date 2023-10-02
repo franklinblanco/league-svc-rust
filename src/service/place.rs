@@ -1,12 +1,10 @@
 use actix_web_utils::{
-    extensions::typed_response::TypedResponse, unwrap_or_return_handled_error,
+    extensions::typed_response::TypedResponse, ServiceResponse,
 };
-use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
-use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
-use league_types::{domain::place::Place, APP_NAME};
+use league_types::domain::place::Place;
 use reqwest::Client;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgConnection};
 
 use crate::dao::{place_dao, player_dao::get_player_with_id};
 
@@ -14,7 +12,8 @@ pub async fn get_places_for_country_paged(
     conn: &mut PgConnection,
     country: String,
     page: i64,
-) -> TypedResponse<Vec<Place>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<Place>> {
 
     let res = unwrap_or_return_handled_error!(
         place_dao::get_places_with_country_paged(conn, country, page).await,
@@ -33,7 +32,8 @@ pub async fn get_places_for_sport(
     conn: &mut PgConnection,
     sport_id: i32,
     page: i64,
-) -> TypedResponse<Vec<Place>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<Place>> {
 
 
     let res = unwrap_or_return_handled_error!(
@@ -53,9 +53,9 @@ pub async fn get_places_for_sport(
 pub async fn get_places_near_me(
     conn: &mut PgConnection,
     client: &Client,
-    mut user_for_auth: UserForAuthenticationDto,
     page: i64,
-) -> TypedResponse<Vec<Place>> {
+    user_id: i32,
+) -> ServiceResponse<Vec<Place>> {
     user_for_auth.app = APP_NAME.to_string();
     let user = unwrap_or_return_handled_error!(
         401,
@@ -94,7 +94,7 @@ pub async fn get_places_near_me(
     )
 }
 
-pub async fn insert_all_places_from_list(conn: &mut PgConnection,) {
+pub async fn insert_all_places_from_list(conn: &mut PgConnection, ) {
     let all_places_persisted = match place_dao::get_all_places(conn).await {
         Ok(places) => places,
         Err(e) => panic!("{}", e.error.to_string()),

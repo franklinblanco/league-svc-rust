@@ -14,7 +14,7 @@ pub async fn insert_league_player(
             league_player.league_id,
             league_player.player_id,
             league_player.time_created,
-            league_player.status
+            league_player.status as _
         )
         .fetch_one(conn)
         .await
@@ -30,7 +30,7 @@ pub async fn update_league_player_status(
         LeaguePlayer,
         "sql/league_player/update.sql",
         update_time,
-        status.to_string(),
+        status as _,
         league_player_id,
     )
     .fetch_one(conn)

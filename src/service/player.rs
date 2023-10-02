@@ -8,7 +8,7 @@ use league_types::{
     },
 };
 use reqwest::Client;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgConnection};
 use user_lib::domain::credential::CredentialType;
 use user_lib::domain::token::Token;
 use user_lib::dto::credential::CredentialDto;
@@ -47,7 +47,7 @@ pub async fn edit_player_profile(
     conn: &mut PgConnection,
     client: &Client,
     player: PlayerForUpdateDto,
-) -> TypedResponse<Player> {
+) -> ServiceResponse<Player> {
     let persisted_user = unwrap_or_return_handled_error!(
         user_service::authenticate_user_with_token(
             client,
@@ -106,7 +106,7 @@ pub async fn login(
     conn: &mut PgConnection,
     client: &Client,
     mut user: UserForLoginDto,
-) -> TypedResponse<Token> {
+) -> ServiceResponse<Token> {
     user.app = APP_NAME.to_string();
     let persisted_token = unwrap_or_return_handled_error!(
         user_service::authenticate_user_with_password(client, &user).await,
@@ -128,7 +128,7 @@ pub async fn login(
 pub async fn get_player_profile(
     conn: &mut PgConnection,
     player_id: i32,
-) -> TypedResponse<PlayerProfileDto> {
+) -> ServiceResponse<PlayerProfileDto> {
     let persisted_player = match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
         PlayerProfileDto
@@ -166,7 +166,7 @@ pub async fn get_player_profile(
 pub async fn get_player_trusted_list(
     conn: &mut PgConnection,
     player_id: i32,
-) -> TypedResponse<Vec<Player>> {
+) -> ServiceResponse<Vec<Player>> {
     match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
         Vec<Player>
@@ -197,7 +197,7 @@ pub async fn get_player_trusted_list(
 pub async fn get_player_trusted_by_list(
     conn: &mut PgConnection,
     player_id: i32,
-) -> TypedResponse<Vec<Player>> {
+) -> ServiceResponse<Vec<Player>> {
     match unwrap_or_return_handled_error!(
         player_dao::get_player_with_id(conn, player_id).await,
         Vec<Player>
@@ -228,7 +228,7 @@ pub async fn get_player_trusted_by_list(
 pub async fn get_player_metadata_bulk(
     conn: &mut PgConnection,
     player_ids: PlayerIds,
-) -> TypedResponse<Vec<PlayerMetadata>> {
+) -> ServiceResponse<Vec<PlayerMetadata>> {
     let player_metadata_list = unwrap_or_return_handled_error!(
         player_dao::get_players_bulk(conn, player_ids.ids).await,
         Vec<PlayerMetadata>
