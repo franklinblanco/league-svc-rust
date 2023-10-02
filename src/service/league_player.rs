@@ -1,5 +1,5 @@
-use actix_web_utils::{extensions::typed_response::TypedResponse, ServiceResponse, x_u_res_db_or_sr, service_error, x_u_res_or_sr};
-use err::{MessageResource, Error, trace, ErrorType, ServiceError as SE};
+use actix_web_utils::{ServiceResponse, x_u_res_db_or_sr, service_error};
+use err::{ServiceError as SE, VecRemove};
 use league_types::{
     domain::{
         enums::league_player_status::{ApprovalStatus, LeaguePlayerStatus, StatusType},
@@ -9,7 +9,6 @@ use league_types::{
     },
     dto::league_player::JoinRequest,
 };
-use reqwest::Client;
 use sqlx::PgConnection;
 
 use crate::dao::{league_dao, league_player_dao, player_dao, trust_dao};
@@ -93,290 +92,180 @@ pub async fn request_to_join_league(
 }
 
 pub async fn get_league_request_status(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     join_req: JoinRequest,
     user_id: i32,
 ) -> ServiceResponse<LeaguePlayer> {
-    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: join_req.user_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        LeaguePlayer
-    );
-    match unwrap_or_return_handled_error!(
+    match x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
-            conn,
+            transaction,
             join_req.league_id,
-            user.id as i32
+            user_id
         )
-        .await,
-        LeaguePlayer
+        .await
     )
-    .get(0)
+    .try_remove(0)
     {
         Some(league_player) => {
-            TypedResponse::return_standard_response(200, league_player.clone())
+            Ok(league_player)
         }
-        None => TypedResponse::return_standard_error(
-            404,
-            MessageResource::new_from_str("LeaguePlayer not found with given ids."),
-        ),
+        None => service_error!(404, SE::NotFoundError("LeaguePlayer not found with given ids.".into()))
     }
 }
 
 /// This method is called by the owner of the league to accept or deny
 /// league players.
 pub async fn change_league_request_status(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     new_status: ApprovalStatus,
     join_req: JoinRequest,
     user_id: i32,
 ) -> ServiceResponse<LeaguePlayer> {
-    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
-    let league = match unwrap_or_return_handled_error!(
-        league_dao::get_league_with_id(conn, join_req.league_id).await,
-        LeaguePlayer
+    let league = match x_u_res_db_or_sr!(
+        league_dao::get_league_with_id(transaction, join_req.league_id).await
     ) {
         Some(league) => league,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("League not found with given id."),
-            )
-        }
+        None => return service_error!(404, SE::NotFoundError("League not found with given id.".into()))
     };
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: league.owner_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        LeaguePlayer
-    );
-    if league.owner_id != user.id as i32 {
-        return TypedResponse::return_standard_error(
-            401,
-            MessageResource::new_from_str("You don't own this league..."),
-        );
+    if league.owner_id != user_id {
+        return service_error!(404, SE::NotFoundError("You don't own this league...".into()));
     }
-    let persisted_league_players = unwrap_or_return_handled_error!(
+    let persisted_league_players = x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
-            conn,
+            transaction,
             join_req.league_id,
-            join_req.user_id
+            user_id
         )
-        .await,
-        LeaguePlayer
+        .await
     );
 
     if persisted_league_players.is_empty() {
-        return TypedResponse::return_standard_error(
-            404,
-            MessageResource::new_from_str("No LeaguePlayer found with given ids."),
-        );
+        return service_error!(404, SE::NotFoundError("No LeaguePlayer found with given ids.".into()));
     }
 
     match attempt_league_request_status_change(&persisted_league_players, new_status) {
         Ok(new_status) => {
             let league_player_to_persist = persisted_league_players.get(new_status.1).unwrap(); // Dangerous unwrap but should always work as this comes from iterating the vec
-            unwrap_or_return_handled_error!(
+            x_u_res_db_or_sr!(
                 league_player_dao::update_league_player_status(
-                    conn,
+                    transaction,
                     league_player_to_persist.id,
                     &new_status.0
                 )
-                .await,
-                LeaguePlayer
+                .await
             );
-            return TypedResponse::return_standard_response(
-                200,
-                unwrap_or_return_handled_error!(
-                    league_player_dao::get_league_player_by_id(conn, league_player_to_persist.id)
-                        .await,
-                    LeaguePlayer
-                ),
-            );
+            return Ok(x_u_res_db_or_sr!(league_player_dao::get_league_player_by_id(transaction, league_player_to_persist.id).await));
         }
         Err(err) => return err,
     };
 }
 
 pub async fn get_all_leagues_player_has_applied_to(
-    conn: &mut PgConnection,
-    client: &Client,
-    join_req: JoinRequest,
+    transaction: &mut PgConnection,
     page: i64,
     user_id: i32,
 ) -> ServiceResponse<Vec<League>> {
-    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: join_req.user_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Vec<League>
-    );
-    let resulting_leagues = unwrap_or_return_handled_error!(
+    let resulting_leagues = x_u_res_db_or_sr!(
         league_dao::get_all_leagues_player_has_applied_to(
-            conn,
-            join_req.user_id,
+            transaction,
+            user_id,
             page
         )
-        .await,
-        Vec<League>
+        .await
     );
     if resulting_leagues.len() > 0 {
-        return TypedResponse::return_standard_response(200, resulting_leagues);
+        return Ok(resulting_leagues);
     }
-    return TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No leagues found with player join requests."),
-    );
+    service_error!(404, SE::NotFoundError("No leagues found with player join requests.".into()))
 }
 
 pub async fn get_all_players_in_league(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     join_req: JoinRequest,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<Player>> {
-    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: join_req.user_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Vec<Player>
-    );
-    let resulting_players: Vec<Player> = unwrap_or_return_handled_error!(
-        player_dao::get_all_players_in_league(conn, join_req.league_id).await,
-        Vec<Player>
+    let resulting_players: Vec<Player> = x_u_res_db_or_sr!(
+        player_dao::get_all_players_in_league(transaction, join_req.league_id, LeaguePlayerStatus::Joined).await
     )
     .into_iter()
     .map(|player| player.clear_all_sensitive_fields())
     .collect();
     if resulting_players.len() > 0 {
-        return TypedResponse::return_standard_response(200, resulting_players);
+        return Ok(resulting_players);
     }
-    return TypedResponse::return_standard_error(
+    service_error!(
         404,
-        MessageResource::new_from_str(
-            "No players found with join requests to the league specified.",
-        ),
-    );
+        SE::NotFoundError(
+            "No players found with join requests to the league specified.".into()
+        )
+    )
 }
 
 pub async fn leave_league(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     join_req: JoinRequest,
     user_id: i32,
 ) -> ServiceResponse<LeaguePlayer> {
-    let mut transaction = x_u_res_db_or_sr!(conn.begin().await);
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_owned(),
-        id: join_req.user_id.to_string(),
-        token: join_req.auth_token.clone(),
-    };
-    unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        LeaguePlayer
-    );
-    let league_players = unwrap_or_return_handled_error!(
+    let league_players = x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
-            &conn,
+            transaction,
             join_req.league_id,
-            join_req.user_id
+            user_id
         )
-        .await,
-        LeaguePlayer
+        .await
     );
     // Just check if there is an active league_player
     for (_index, league_player) in league_players.iter().enumerate() {
-        let status = unwrap_or_return_handled_error!(
-            LeaguePlayerStatus::from_str(league_player.status.as_str()),
-            LeaguePlayer
-        );
-        if status.get_status_type() == StatusType::Active {
-            //
-            let status_to_be_persisted = match status {
+        if league_player.status.get_status_type() == StatusType::Active {
+            let status_to_be_persisted = match league_player.status {
                 LeaguePlayerStatus::Joined => LeaguePlayerStatus::Left,
                 LeaguePlayerStatus::Requested => LeaguePlayerStatus::Canceled,
                 LeaguePlayerStatus::Invited => LeaguePlayerStatus::Canceled,
                 _ => {
-                    return TypedResponse::return_standard_error(
+                    return service_error!(
                         500,
-                        MessageResource::new_from_str("Something went wrong."),
+                        SE::UnexpectedError("Something went wrong.".into())
                     )
                 }
             };
-            let updated_league_player = unwrap_or_return_handled_error!(
+            let updated_league_player = x_u_res_db_or_sr!(
                 league_player_dao::update_league_player_status(
-                    conn,
+                    transaction,
                     league_player.id,
                     &status_to_be_persisted
                 )
-                .await,
-                LeaguePlayer
+                .await
             );
-            return TypedResponse::return_standard_response(200, updated_league_player);
+            return Ok(updated_league_player);
         }
     }
-    println!(
+    log::warn!(
         "Player tried to leave without having active leagues... LeaguePlayers: {:#?}",
         league_players
     );
-    return TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str(
-            "No players found with active join requests to the league specified.",
-        ),
-    );
+    service_error!(404, SE::NotFoundError("No players found with active join requests to the league specified.".into()))
 }
 
 // #################
 // PRIVATE FUNCTIONS
 // #################
 
+/// TODO: Test and validate this function. Wtf old me?
+/// Hint: Vec of good things and vec of bad things, not whatever happens first...
 fn attempt_league_request_status_change(
     persisted_league_players: &Vec<LeaguePlayer>,
     new_status: ApprovalStatus,
 ) -> Result<(LeaguePlayerStatus, usize), ServiceResponse<LeaguePlayer>> {
-    let mut last_error: ServiceResponse<LeaguePlayer> =
-        TypedResponse::return_empty_response(400);
+    let mut last_error: ServiceResponse<LeaguePlayer>;
 
     for (index, persisted_league_player) in persisted_league_players.iter().enumerate() {
-        let persisted_status = match persisted_league_player.status.parse::<LeaguePlayerStatus>() {
-            Ok(status) => status,
-            Err(err) => return Err(err.convert_to_returnable(400)),
-        };
+        let persisted_status = persisted_league_player.status;
         match new_status {
             ApprovalStatus::Approved => {
                 if persisted_status == LeaguePlayerStatus::Requested {
                     return Ok((LeaguePlayerStatus::Joined, index));
                 } else {
-                    last_error = TypedResponse::return_standard_error(
-                        400,
-                        MessageResource::new_from_str(
-                            "Cannot approve LeaguePlayer with non-approvable status.",
-                        ),
-                    );
+                    last_error = service_error!(400, SE::NotAllowed("Cannot approve LeaguePlayer with non-approvable status.".into()));
                 }
             }
             ApprovalStatus::Denied => {
@@ -387,11 +276,7 @@ fn attempt_league_request_status_change(
                     }
                     LeaguePlayerStatus::Invited => return Ok((LeaguePlayerStatus::Denied, index)),
                     _ => {
-                        last_error = TypedResponse::return_standard_error(
-                            400,
-                            MessageResource::new_from_str(
-                                "Cannot deny LeaguePlayer with non-deniable status.",
-                            ),
+                        last_error = service_error!(400, SE::NotAllowed("Cannot deny LeaguePlayer with non-deniable status.".into())
                         );
                     }
                 };
