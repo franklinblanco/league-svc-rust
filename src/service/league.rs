@@ -1,13 +1,11 @@
 use actix_web_utils::{
-    extensions::typed_response::TypedResponse, unwrap_or_return_handled_error,
+    ServiceResponse, x_u_res_db_or_sr, service_error,
 };
+
 use chrono::Utc;
-use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
-use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
-use err::MessageResource;
-use league_types::{domain::league::League, dto::league::LeagueForCreationDto, APP_NAME};
-use reqwest::Client;
-use sqlx::{PgPool, PgConnection};
+use err::ServiceError as SE;
+use league_types::{domain::{league::League, enums::league_player_status::LeaguePlayerStatus}, dto::league::LeagueForCreationDto};
+use sqlx::PgConnection;
 
 use crate::
     dao::{
@@ -17,172 +15,101 @@ use crate::
 
 /// Create a league.
 pub async fn create_league(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     league: LeagueForCreationDto,
     user_id: i32,
 ) -> ServiceResponse<League> {
-    let user_auth_dto = UserForAuthenticationDto {
-        app: APP_NAME.to_string(),
-        id: league.user_id.to_string(),
-        token: league.auth_token.clone(),
-    };
-
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_auth_dto).await,
-        League
-    );
-
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, League) {
-        Some(player) => player,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Player profile not found."),
-            )
-        }
-    };
-
     // TODO: Validation: League time must be in the future
     // TODO: Validate user doesn't have more than 10 leagues open?
-    TypedResponse::return_standard_response(200, 
-        unwrap_or_return_handled_error!(insert_league(conn, League::from(league)).await, League))
+    Ok(x_u_res_db_or_sr!(insert_league(transaction, League::from_league_creation_dto(league, user_id)).await))
 }
 
 /// Used to get a specific league
-pub async fn get_league(conn: &mut PgConnection, id: i32, user_id: i32) -> ServiceResponse<League> {
-    match unwrap_or_return_handled_error!(get_league_with_id(conn, id).await, League) {
-        Some(league) => TypedResponse::return_standard_response(200, league),
-        None => TypedResponse::return_standard_error(
-            404,
-            MessageResource::new_from_str("League not found."),
-        ),
+pub async fn get_league(transaction: &mut PgConnection, id: i32, _user_id: i32) -> ServiceResponse<League> {
+    match x_u_res_db_or_sr!(get_league_with_id(transaction, id).await) {
+        Some(league) => Ok(league),
+        None => service_error!(404, SE::NotFoundError("League not found.".into()))
     }
 }
 
 /// This route infers the player's area by his country & city.
 pub async fn get_open_leagues_in_my_area(
-    conn: &mut PgConnection,
-    client: &Client,
-    user_for_auth: UserForAuthenticationDto,
+    transaction: &mut PgConnection,
     page: i64,
     user_id: i32,
 ) -> ServiceResponse<Vec<League>> {
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Vec<League>
-    );
-    let player = match unwrap_or_return_handled_error!(
-        get_player_with_id(conn, user.id as i32).await,
-        Vec<League>
+    let player = match x_u_res_db_or_sr!(
+        get_player_with_id(transaction, user_id).await
     ) {
         Some(player) => player,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Player profile not found."),
-            )
-        }
+        None => return service_error!(404, SE::NotFoundError("Player profile not found.".into()))
     };
 
-    let res = unwrap_or_return_handled_error!(
-        get_leagues_by_country_limited_to(conn, player.country, page).await,
-        Vec<League>
+    let res = x_u_res_db_or_sr!(
+        get_leagues_by_country_limited_to(transaction, player.country, page).await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No leagues found for your country."),
-    )
+    service_error!(404, SE::NotFoundError("No leagues found for your country.".into()))
 }
 
 /// This route is used to get leagues from a country
 pub async fn get_leagues_in_country(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     country: &String,
     page: i64,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<League>> {
-    let res = unwrap_or_return_handled_error!(
-        get_leagues_by_country_limited_to(conn, country.clone(), page)
-            .await,
-        Vec<League>
+    let res = x_u_res_db_or_sr!(
+        get_leagues_by_country_limited_to(transaction, country.clone(), page)
+            .await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No leagues found for country."),
-    )
+    service_error!(404, SE::NotFoundError("No leagues found for your country.".into()))
 }
 
 /// This route is used to get leagues from a country
 pub async fn get_leagues_in_place(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     place_id: i32,
     page: i64,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<League>> {
-    let res = unwrap_or_return_handled_error!(
-        get_leagues_by_in_place_limited_to(conn, place_id, page).await,
-        Vec<League>
+    let res = x_u_res_db_or_sr!(
+        get_leagues_by_in_place_limited_to(transaction, place_id, page).await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No leagues found for place."),
-    )
+    service_error!(404, SE::NotFoundError("No leagues found for place.".into()))
 }
 
 /// Only shows non unlisted leagues //TODO: Make a new endpoint to get MyLeagues (Only callable by the owner)
 pub async fn get_leagues_hosted_by_player(
-    conn: &mut PgConnection,
-    client: &Client,
-    user_for_auth: UserForAuthenticationDto,
+    transaction: &mut PgConnection,
+    player_id: i32,
     page: i64,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<League>> {
-    unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Vec<League>
-    );
-
-    let leagues = unwrap_or_return_handled_error!(
-        get_leagues_by_player_limited_to(conn, player_id, page).await,
-        Vec<League>
+    let leagues = x_u_res_db_or_sr!(
+        get_leagues_by_player_limited_to(transaction, player_id, page).await
     );
     if leagues.len() > 0 {
-        return TypedResponse::return_standard_response(200, leagues);
+        return Ok(leagues);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No leagues found for place."),
-    )
+    service_error!(404, SE::NotFoundError("No leagues found hosted by player.".into()))
 }
 
 pub async fn get_average_league_age(
-    conn: &mut PgConnection,
-    client: &Client,
-    user_for_auth: UserForAuthenticationDto,
+    transaction: &mut PgConnection,
     league_id: i32,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<u8> {
-    unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        u8
-    );
-    let all_players_in_league = unwrap_or_return_handled_error!(
-        player_dao::get_all_players_in_league(conn, league_id).await,
-        u8
+    let all_players_in_league = x_u_res_db_or_sr!(
+        player_dao::get_all_players_in_league(transaction, league_id, LeaguePlayerStatus::Joined).await
     );
     let (mut age_total, mut amount): (u8, u8) = (0, 0);
     for player in all_players_in_league {
@@ -194,5 +121,5 @@ pub async fn get_average_league_age(
                 / 365) as u8;
         amount += 1;
     }
-    TypedResponse::return_standard_response(200, age_total / amount)
+    Ok(age_total / amount)
 }
