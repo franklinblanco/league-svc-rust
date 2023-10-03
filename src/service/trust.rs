@@ -1,109 +1,65 @@
-use actix_web_utils::{extensions::typed_response::TypedResponse, ServiceResponse};
-use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
-use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
-use err::MessageResource;
+use actix_web_utils::{ServiceResponse, x_u_res_db_or_sr, service_error};
+use err::ServiceError as SE;
 use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto};
-use reqwest::Client;
-use sqlx::{PgPool, PgConnection};
+use sqlx::PgConnection;
 
 use crate::dao::{player_dao::get_player_with_id, trust_dao};
 
 pub async fn add_trusted_player(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     trust_req: TrustRequestDto,
+    user_id: i32,
 ) -> ServiceResponse<Trust> {
-    match unwrap_or_return_handled_error!(
-        trust_dao::get_trust_with_both_ids(conn, trust_req.truster_id, trust_req.trustee_id).await,
-        Trust
+    match x_u_res_db_or_sr!(
+        trust_dao::get_trust_with_both_ids(transaction, user_id, trust_req.trustee_id).await
     ) {
         Some(_) => {
-            return TypedResponse::return_standard_error(
-                400,
-                MessageResource::new_from_str("You already trust this player."),
-            )
+            return service_error!(400, SE::NotFoundError("You already trust this player.".into()))
         }
         None => { /* Do nothing */ }
     };
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
+    match x_u_res_db_or_sr!(get_player_with_id(transaction, user_id).await) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Truster Player profile not found."),
-            )
+            return service_error!(404, SE::NotFoundError("Truster Player profile not found.".into()))
         }
     };
-    match unwrap_or_return_handled_error!(
-        get_player_with_id(conn, trust_req.trustee_id).await,
-        Trust
+    match x_u_res_db_or_sr!(
+        get_player_with_id(transaction, trust_req.trustee_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Trustee Player profile not found."),
-            )
+            return service_error!(404, SE::NotFoundError("Trustee Player profile not found.".into()))
         }
     };
-    let trust_to_insert = Trust::from(trust_req.clone());
-    if trust_req.truster_id == trust_req.trustee_id {
-        return TypedResponse::return_standard_error(
-            400,
-            MessageResource::new_from_str("You can't trust yourself..."),
-        );
+    let trust_to_insert = Trust::from_trust_dto(trust_req.clone(), user_id);
+    if user_id == trust_req.trustee_id {
+        return service_error!(400, SE::NotAllowed("You can't trust yourself...".into()));
     }
-    unwrap_or_return_handled_error!(trust_dao::insert_trust(conn, &trust_to_insert).await, Trust);
-    TypedResponse::return_standard_response(200, trust_to_insert)
+    Ok(x_u_res_db_or_sr!(trust_dao::insert_trust(transaction, &trust_to_insert).await))
 }
 
 pub async fn remove_trusted_player(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     trust_req: TrustRequestDto,
+    user_id: i32,
 ) -> ServiceResponse<Trust> {
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_string(),
-        id: trust_req.truster_id.to_string(),
-        token: trust_req.auth_token.clone(),
-    };
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Trust
-    );
-    match unwrap_or_return_handled_error!(get_player_with_id(conn, user.id as i32).await, Trust) {
+    match x_u_res_db_or_sr!(get_player_with_id(transaction, user_id).await) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Truster Player profile not found."),
-            )
+            return service_error!(404, SE::NotFoundError("Truster Player profile not found.".into()))
         }
     };
-    match unwrap_or_return_handled_error!(
-        get_player_with_id(conn, trust_req.trustee_id).await,
-        Trust
+    match x_u_res_db_or_sr!(
+        get_player_with_id(transaction, trust_req.trustee_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Trustee Player profile not found."),
-            )
+            return service_error!(404, SE::NotFoundError("Trustee Player profile not found.".into()))
         }
     };
-    match unwrap_or_return_handled_error!(
-        trust_dao::delete_trust_with_both_ids(conn, trust_req.truster_id, trust_req.trustee_id)
-            .await,
-        Trust
-    )
-    .rows_affected()
-    {
-        0 => TypedResponse::return_standard_error(
-            404,
-            MessageResource::new_from_str("You didn't trust this player in the first place."),
-        ),
-        _ => TypedResponse::return_empty_response(200),
-    }
+    Ok(x_u_res_db_or_sr!(
+        trust_dao::delete_trust_with_both_ids(transaction, user_id, trust_req.trustee_id)
+            .await
+    ))
 }
