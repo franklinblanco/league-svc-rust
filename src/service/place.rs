@@ -1,10 +1,7 @@
-use actix_web_utils::{
-    extensions::typed_response::TypedResponse, ServiceResponse,
-};
-use err::MessageResource;
+use actix_web_utils::{ServiceResponse, x_u_res_db_or_sr, service_error};
+use err::ServiceError as SE;
 use league_types::domain::place::Place;
-use reqwest::Client;
-use sqlx::{PgPool, PgConnection};
+use sqlx::PgConnection;
 
 use crate::dao::{place_dao, player_dao::get_player_with_id};
 
@@ -12,92 +9,67 @@ pub async fn get_places_for_country_paged(
     conn: &mut PgConnection,
     country: String,
     page: i64,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<Place>> {
 
-    let res = unwrap_or_return_handled_error!(
-        place_dao::get_places_with_country_paged(conn, country, page).await,
-        Vec<Place>
+    let res = x_u_res_db_or_sr!(
+        place_dao::get_places_with_country_paged(conn, country, page).await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No places found for your country."),
-    )
+    service_error!(404, SE::NotFoundError("No places found for your country.".into()))
 }
 
 pub async fn get_places_for_sport(
     conn: &mut PgConnection,
     sport_id: i32,
     page: i64,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<Place>> {
-
-
-    let res = unwrap_or_return_handled_error!(
+    let res = x_u_res_db_or_sr!(
         place_dao::get_place_with_sport_id_paged(conn, sport_id, page)
-            .await,
-        Vec<Place>
+            .await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No places found for your country."),
-    )
+    service_error!(404, SE::NotFoundError("No places found for your country.".into()))
 }
 
 pub async fn get_places_near_me(
     conn: &mut PgConnection,
-    client: &Client,
     page: i64,
     user_id: i32,
 ) -> ServiceResponse<Vec<Place>> {
-    user_for_auth.app = APP_NAME.to_string();
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Vec<Place>
-    );
-    let player = match unwrap_or_return_handled_error!(
-        get_player_with_id(conn, user.id as i32).await,
-        Vec<Place>
+    let player = match x_u_res_db_or_sr!(
+        get_player_with_id(conn, user_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str("Player profile not found."),
-            )
+            return service_error!(404, SE::NotFoundError("Player profile not found".into()))
         }
     };
 
 
-    let res = unwrap_or_return_handled_error!(
+    let res = x_u_res_db_or_sr!(
         place_dao::get_places_with_country_paged(
             conn,
             player.country,
             page,
         )
-        .await,
-        Vec<Place>
+        .await
     );
     if res.len() > 0 {
-        return TypedResponse::return_standard_response(200, res);
+        return Ok(res);
     }
-    TypedResponse::return_standard_error(
-        404,
-        MessageResource::new_from_str("No places found for your country."),
-    )
+    service_error!(404, SE::NotFoundError("No places found for your country.".into()))
 }
 
 pub async fn insert_all_places_from_list(conn: &mut PgConnection, ) {
     let all_places_persisted = match place_dao::get_all_places(conn).await {
         Ok(places) => places,
-        Err(e) => panic!("{}", e.error.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     };
     let all_places: Vec<Place> = match serde_json::from_str(include_str!("../../places.json")) {
         Ok(res) => match res {
@@ -134,7 +106,7 @@ pub async fn insert_all_places_from_list(conn: &mut PgConnection, ) {
     for place in all_places {
         match place_dao::insert_place(conn, place).await {
             Ok(_) => {}
-            Err(e) => panic!("{}", e.error.to_string()),
+            Err(e) => panic!("{}", e.to_string()),
         }
     }
 }

@@ -1,12 +1,14 @@
-use sqlx::PgPool;
+use actix_web_utils::{ServiceResponse, x_u_res_db_or_sr};
+use league_types::domain::sport::Sport;
+use sqlx::PgConnection;
 
 use crate::{dao::sport_dao, util::text_serializer};
 
-pub async fn insert_all_sports_from_list(conn: &mut PgConnection,) {
+pub async fn insert_all_sports_from_list(conn: &mut PgConnection) {
     // This adds a lot of time to the startup. Find a way to cancel it maybe?
     let persisted_sports = match sport_dao::get_all_sports_ordered(conn).await {
         Ok(sports) => sports,
-        Err(err) => panic!("{:?}", err.error),
+        Err(error) => panic!("{:?}", error),
     };
 
     let all_sports = text_serializer::parse_sport_list();
@@ -16,12 +18,14 @@ pub async fn insert_all_sports_from_list(conn: &mut PgConnection,) {
         return;
     }
 
-    let mut tx = conn.begin().await.unwrap();
     for sport in all_sports {
-        match sport_dao::insert_sport(&mut tx, sport).await {
+        match sport_dao::insert_sport(conn, sport).await {
             Ok(_) => {}
-            Err(err) => println!("{:?}", err.error),
+            Err(error) => println!("{:?}", error),
         };
     }
-    tx.commit().await.unwrap();
+}
+
+pub async fn get_all_sports(conn: &mut PgConnection) -> ServiceResponse<Vec<Sport>> {
+    Ok(x_u_res_db_or_sr!(sport_dao::get_all_sports_ordered(conn).await))
 }

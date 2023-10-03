@@ -1,10 +1,10 @@
-use actix_web_utils::extensions::typed_response::TypedResponse;
+use actix_web_utils::{extensions::typed_response::TypedResponse, ServiceResponse};
 use dev_communicators::middleware::user_svc::user_service::authenticate_user_with_token;
 use dev_dtos::dtos::user::user_dtos::UserForAuthenticationDto;
 use err::MessageResource;
-use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto, APP_NAME};
+use league_types::{domain::trust::Trust, dto::trust::TrustRequestDto};
 use reqwest::Client;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgConnection};
 
 use crate::dao::{player_dao::get_player_with_id, trust_dao};
 
@@ -13,16 +13,6 @@ pub async fn add_trusted_player(
     client: &Client,
     trust_req: TrustRequestDto,
 ) -> ServiceResponse<Trust> {
-    let user_for_auth = UserForAuthenticationDto {
-        app: APP_NAME.to_string(),
-        id: trust_req.truster_id.to_string(),
-        token: trust_req.auth_token.clone(),
-    };
-    let user = unwrap_or_return_handled_error!(
-        401,
-        authenticate_user_with_token(client, &user_for_auth).await,
-        Trust
-    );
     match unwrap_or_return_handled_error!(
         trust_dao::get_trust_with_both_ids(conn, trust_req.truster_id, trust_req.trustee_id).await,
         Trust
