@@ -11,13 +11,14 @@ pub async fn get_places_for_country_paged(
     page: i64,
     _user_id: i32,
 ) -> ServiceResponse<Vec<Place>> {
-
+    println!("{country}");
     let res = x_u_res_db_or_sr!(
         place_dao::get_places_with_country_paged(conn, country, page).await
     );
     if res.len() > 0 {
         return Ok(res);
     }
+    
     service_error!(404, SE::NotFoundError("No places found for your country.".into()))
 }
 

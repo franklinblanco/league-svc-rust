@@ -36,7 +36,7 @@ pub async fn authenticate_user_for_route<T: Serialize>(conn: &PgPool, request: H
         Ok(user) => Ok(user.id),
         Err(error) => {
             log::error!("{error}");
-            Err(TypedResponse::std_error(401, Error::new(trace!()).error_type(err::ErrorType::Privilege).message("Error getting database connection from pool in authentication function.")))
+            Err(TypedResponse::std_error(401, Error::new(trace!()).error_type(err::ErrorType::Privilege).message("User Id and token combination not found in database.")))
         },
     }
 }

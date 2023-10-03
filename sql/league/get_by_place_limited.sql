@@ -13,4 +13,4 @@ SELECT id,
     description FROM league
 WHERE place_id = $1 AND visibility = 'Unlisted'
 ORDER BY time_created DESC
-LIMIT $2 OFFSET 25;
+LIMIT 25 OFFSET $2;

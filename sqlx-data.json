@@ -530,7 +530,7 @@
         ]
       }
     },
-    "query": "SELECT l.* FROM league l\nLEFT JOIN place p ON p.id = l.place_id\nWHERE p.country = $1 AND visibility = 'Unlisted'\nORDER BY l.time_created DESC\nLIMIT $2 OFFSET 25;"
+    "query": "SELECT l.* FROM league l\nLEFT JOIN place p ON p.id = l.place_id\nWHERE p.country = $1 AND visibility = 'Unlisted'\nORDER BY l.time_created DESC\nLIMIT 25 OFFSET $2;"
   },
   "4893ba4c13a2b515a217da8955f30a841155990412bebb68d6c736769915dea2": {
     "describe": {
@@ -753,7 +753,7 @@
         ]
       }
     },
-    "query": "SELECT * FROM league\nWHERE owner_id = $1 AND visibility = $2\nORDER BY time_created DESC\nLIMIT $3 OFFSET 25;"
+    "query": "SELECT * FROM league\nWHERE owner_id = $1 AND visibility = $2\nORDER BY time_created DESC\nLIMIT 25 OFFSET $3;"
   },
   "66642b0d34f0e0434ceff61e1e30be9494c68cc27a0ef5cdcfcf870134720739": {
     "describe": {
@@ -964,7 +964,7 @@
         ]
       }
     },
-    "query": "SELECT * FROM place\nWHERE country = $1\nORDER BY time_created DESC\nLIMIT $2 OFFSET 25;"
+    "query": "SELECT * FROM place\nWHERE country = $1\nORDER BY time_created DESC\nLIMIT 25 OFFSET $2;"
   },
   "72b3c7c9550a46f00a0eacf1c538a5e79195264a118eb093223a707a51930685": {
     "describe": {
@@ -1172,7 +1172,7 @@
         ]
       }
     },
-    "query": "SELECT * FROM league\nWHERE place_id = $1 AND visibility = 'Unlisted'\nORDER BY time_created DESC\nLIMIT $2 OFFSET 25;"
+    "query": "SELECT * FROM league\nWHERE place_id = $1 AND visibility = 'Unlisted'\nORDER BY time_created DESC\nLIMIT 25 OFFSET $2;"
   },
   "903cf22bea3cfba007abc071030f3bb88879f3f397d2d1ccd999d45606177256": {
     "describe": {
@@ -1291,7 +1291,7 @@
         ]
       }
     },
-    "query": "SELECT * FROM place\nWHERE sport_id = $1\nORDER BY time_created DESC\nLIMIT $2 OFFSET 25;"
+    "query": "SELECT * FROM place\nWHERE sport_id = $1\nORDER BY time_created DESC\nLIMIT 25 OFFSET $2;"
   },
   "9eb603b129babf42fba41cb793709b17a0c6439d99b1931dc900c64d7b72286a": {
     "describe": {
@@ -1783,7 +1783,7 @@
         ]
       }
     },
-    "query": "SELECT le.*\nFROM league le\nINNER JOIN league_player lp ON\nlp.league_id = le.id\nWHERE lp.player_id = $1\nORDER BY le.time_created DESC\nLIMIT $2 OFFSET 25;"
+    "query": "SELECT le.*\nFROM league le\nINNER JOIN league_player lp ON\nlp.league_id = le.id\nWHERE lp.player_id = $1\nORDER BY le.time_created DESC\nLIMIT 25 OFFSET $2;"
   },
   "fcc6e75061994e549e0d7a413e7313a142b668d030189645dad4032afd0ff89c": {
     "describe": {

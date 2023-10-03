@@ -1,7 +1,7 @@
 [
     {
         "name": "Brazuka cancha sintética",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -12,7 +12,7 @@
     },
     {
         "name": "Soccertown",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -23,7 +23,7 @@
     },
     {
         "name": "Open Fitness Cancha de Futbol",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -34,7 +34,7 @@
     },
     {
         "name": "Santa Fé Futbol club",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -45,7 +45,7 @@
     },
     {
         "name": "La Media Cancha",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -56,7 +56,7 @@
     },
     {
         "name": "Cancha de Fútbol ODEBRECHT",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -67,7 +67,7 @@
     },
     {
         "name": "Corner kick",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
@@ -78,7 +78,7 @@
     },
     {
         "name": "Saint Joseph's Field",
-        "sport_id": 29,
+        "sport_id": 0,
         "country": "República Dominicana",
         "state": "Distrito Nacional",
         "city" : "Santo Domingo",
