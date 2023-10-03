@@ -1,15 +1,15 @@
-use actix_web_utils::{extensions::typed_response::TypedResponse, u_opt_or_sr, ServiceResponse, u_res_or_sr};
-use err::{MessageResource, x_u_res_db_or_res};
+use actix_web_utils::{ServiceResponse, u_res_or_sr, x_u_res_db_or_sr, service_error, x_u_res_or_sr};
+use err::ServiceError as SE;
 use league_types::{
     domain::player::Player,
     dto::{
-        player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto},
+        player::{PlayerForCreationDto, PlayerForUpdateDto, PlayerProfileDto, PlayerForLoginDto},
         player_metadata::{PlayerIds, PlayerMetadata},
     },
 };
-use reqwest::Client;
-use sqlx::{PgPool, PgConnection};
-use user_lib::domain::credential::CredentialType;
+
+use sqlx::PgConnection;
+use user_lib::{domain::credential::CredentialType, dto::users::UserLoginPayload, service::user::password_login};
 use user_lib::domain::token::Token;
 use user_lib::dto::credential::CredentialDto;
 use user_lib::dto::users::UserRegisterPayload;
@@ -21,140 +21,88 @@ use crate::{
 };
 
 pub async fn create_player_profile(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     player: PlayerForCreationDto,
 ) -> ServiceResponse<Token> {
-    let mut connection = conn.acquire().await.expect("Error acquiring connection.");
-    
+    let cloned_player = player.clone();
     let register_user_payload = UserRegisterPayload {
         credentials: Vec::from([CredentialDto { credential: player.phone_number, credential_type: CredentialType::PhoneNumber }]),
         password: player.password,
         name: player.name,
     };
     let persisted_token =
-        u_res_or_sr!(register_user(&mut connection, register_user_payload).await);
-    let mut player_to_persist = Player::from(player);
+        u_res_or_sr!(register_user(transaction, register_user_payload).await);
+    let mut player_to_persist = Player::from(cloned_player);
     player_to_persist.id = persisted_token.user_id as i32;
     
-    x_u_res_db_or_res!(player_dao::insert_player(conn, player_to_persist).await);
-    TypedResponse::return_standard_response(200, persisted_token)
+    x_u_res_db_or_sr!(player_dao::insert_player(transaction, player_to_persist).await);
+    Ok(persisted_token)
 }
 //TODO: Sign in & forgot password?
 
 /// Called to update any detail in the player profile
 pub async fn edit_player_profile(
-    conn: &mut PgConnection,
-    client: &Client,
+    transaction: &mut PgConnection,
     player: PlayerForUpdateDto,
+    user_id: i32,
 ) -> ServiceResponse<Player> {
-    let persisted_user = unwrap_or_return_handled_error!(
-        user_service::authenticate_user_with_token(
-            client,
-            &UserForAuthenticationDto {
-                app: APP_NAME.to_string(),
-                id: player.user_id.to_string(),
-                token: player.auth_token.clone()
-            }
-        )
-        .await,
-        Player
-    );
     //  Attempt to find player in database with the user id that user service gave back
-    let persisted_player = match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_user.id as i32).await,
-        Player
+    let persisted_player = match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, user_id).await
     ) {
         Some(found_player) => found_player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str(
-                    "Could not find player with id. Something went wrong.",
-                ),
-            )
+            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
         }
     };
-    let player_to_update = unwrap_or_return_handled_error!(
-        400,
+    let player_to_update = x_u_res_or_sr!(
         converter::update_player_struct(player, persisted_player),
-        Player
+        SE::NotAllowed(String::new())
     );
-    unwrap_or_return_handled_error!(
-        player_dao::update_player_with_id(conn, player_to_update).await,
-        Player
-    );
-    let updated_player = match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_user.id as i32).await,
-        Player
-    ) {
-        Some(found_player) => found_player,
-        None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str(
-                    "Could not find player with id. Something went wrong.",
-                ),
-            )
-        }
-    };
-    //  Debating in between an empty response with an OK or a more elaborate response with the updated Player.
-    return TypedResponse::return_standard_response(200, updated_player);
+    Ok(x_u_res_db_or_sr!(player_dao::update_player_with_id(transaction, player_to_update).await))
 }
-//TODO: Verify user phone number
+
 pub async fn login(
-    conn: &mut PgConnection,
-    client: &Client,
-    mut user: UserForLoginDto,
+    transaction: &mut PgConnection,
+    user: PlayerForLoginDto,
 ) -> ServiceResponse<Token> {
-    user.app = APP_NAME.to_string();
-    let persisted_token = unwrap_or_return_handled_error!(
-        user_service::authenticate_user_with_password(client, &user).await,
-        Token
+    let persisted_token = u_res_or_sr!(
+        password_login(transaction, UserLoginPayload {
+            credential: user.phone_number,
+            credential_type: CredentialType::PhoneNumber,
+            password: user.password }).await
     );
 
-    match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, persisted_token.user_id as i32).await,
-        Token
+    match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, persisted_token.user_id).await
     ) {
-        Some(_) => TypedResponse::return_standard_response(200, persisted_token),
-        None => TypedResponse::return_standard_error(
-            404,
-            MessageResource::new_from_str("Could not find player with id. Something went wrong."),
-        ),
+        Some(_) => Ok(persisted_token),
+        None => service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into())),
     }
 }
 
 pub async fn get_player_profile(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     player_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<PlayerProfileDto> {
-    let persisted_player = match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, player_id).await,
-        PlayerProfileDto
+    let persisted_player = match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, player_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str(
-                    "Could not find player with id. Something went wrong.",
-                ),
-            )
+            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
         }
     };
 
-    let trusted_player_count = unwrap_or_return_handled_error!(
-        trust_dao::get_trusts_by_truster_id(conn, player_id).await,
-        PlayerProfileDto
+    let trusted_player_count = x_u_res_db_or_sr!(
+        trust_dao::get_trusts_by_truster_id(transaction, player_id).await
     );
-    let trusted_by_player_count = unwrap_or_return_handled_error!(
-        trust_dao::get_trusts_by_trustee_id(conn, player_id).await,
-        PlayerProfileDto
+    let trusted_by_player_count = x_u_res_db_or_sr!(
+        trust_dao::get_trusts_by_trustee_id(transaction, player_id).await
     );
 
-    TypedResponse::return_standard_response(
-        200,
+    Ok(
         PlayerProfileDto::new_from_player_and_counts(
             &persisted_player,
             trusted_player_count.count,
@@ -164,74 +112,50 @@ pub async fn get_player_profile(
 }
 
 pub async fn get_player_trusted_list(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     player_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<Player>> {
-    match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, player_id).await,
-        Vec<Player>
+    match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, player_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str(
-                    "Could not find player with id. Something went wrong.",
-                ),
-            )
+            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
         }
     };
 
-    match player_dao::get_all_trusted_players(conn, player_id).await {
-        Ok(players) => TypedResponse::return_standard_response(
-            200,
-            players
-                .into_iter()
-                .map(|player| Player::clear_all_sensitive_fields(player))
-                .collect(),
-        ),
-        Err(e) => TypedResponse::return_standard_error(500, MessageResource::from(e.error)),
-    }
+    Ok(x_u_res_db_or_sr!(player_dao::get_all_trusted_players(transaction, player_id).await).into_iter()
+    .map(|player| Player::clear_all_sensitive_fields(player))
+    .collect())
 }
 
 pub async fn get_player_trusted_by_list(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     player_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<Player>> {
-    match unwrap_or_return_handled_error!(
-        player_dao::get_player_with_id(conn, player_id).await,
-        Vec<Player>
+    match x_u_res_db_or_sr!(
+        player_dao::get_player_with_id(transaction, player_id).await
     ) {
         Some(player) => player,
         None => {
-            return TypedResponse::return_standard_error(
-                404,
-                MessageResource::new_from_str(
-                    "Could not find player with id. Something went wrong.",
-                ),
-            )
+            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
         }
     };
 
-    match player_dao::get_all_players_that_trust_player(conn, player_id).await {
-        Ok(players) => TypedResponse::return_standard_response(
-            200,
-            players
-                .into_iter()
-                .map(|player| Player::clear_all_sensitive_fields(player))
-                .collect(),
-        ),
-        Err(e) => TypedResponse::return_standard_error(500, MessageResource::from(e.error)),
-    }
+    Ok(x_u_res_db_or_sr!(player_dao::get_all_players_that_trust_player(transaction, player_id).await).into_iter()
+    .map(|player| Player::clear_all_sensitive_fields(player))
+    .collect())
 }
 
 pub async fn get_player_metadata_bulk(
-    conn: &mut PgConnection,
+    transaction: &mut PgConnection,
     player_ids: PlayerIds,
+    _user_id: i32,
 ) -> ServiceResponse<Vec<PlayerMetadata>> {
-    let player_metadata_list = unwrap_or_return_handled_error!(
-        player_dao::get_players_bulk(conn, player_ids.ids).await,
-        Vec<PlayerMetadata>
+    let player_metadata_list = x_u_res_db_or_sr!(
+        player_dao::get_players_bulk(transaction, player_ids.ids).await
     );
-    TypedResponse::return_standard_response(200, player_metadata_list)
+    Ok(player_metadata_list.into_iter().map(|p|p.into()).collect())
 }
