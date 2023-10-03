@@ -60,7 +60,7 @@ pub async fn get_specific_league(
     finish_tx!(response, transaction)
 }
 
-#[post("/player/{user_id}/{page}")]
+#[get("/player/{user_id}/{page}")]
 pub async fn get_leagues_hosted_by_player(
     conn: Data<Arc<PgPool>>,
     request: HttpRequest,
@@ -95,3 +95,5 @@ pub async fn get_average_league_age(
     let response = league::get_average_league_age(&mut *transaction, *league_id, user_id).await;
     finish_tx!(response, transaction)
 }
+
+//TODO: Leave league

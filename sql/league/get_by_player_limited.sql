@@ -11,6 +11,6 @@ SELECT id,
     currency,
     max_players,
     description FROM league
-WHERE owner_id = $1 AND visibility = $2
+WHERE owner_id = $1 AND visibility != $2
 ORDER BY time_created DESC
 LIMIT 25 OFFSET $3;

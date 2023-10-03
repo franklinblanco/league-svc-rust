@@ -11,6 +11,6 @@ SELECT id,
     currency,
     max_players,
     description FROM league
-WHERE place_id = $1 AND visibility = 'Unlisted'
+WHERE place_id = $1 AND visibility != 'Unlisted'
 ORDER BY time_created DESC
 LIMIT 25 OFFSET $2;

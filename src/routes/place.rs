@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{
-    get, post,
+    get,
     web::{Data, Path}, HttpRequest,
 };
 use actix_web_utils::extensions::{typed_response::TypedResponse, service_response::IntoResponse};
@@ -35,7 +35,7 @@ pub async fn get_places_for_sport(
     finish_tx!(response, transaction)
 }
 
-#[post("/nearme/{page}")]
+#[get("/nearme/{page}")]
 pub async fn get_places_near_me(
     conn: Data<Arc<PgPool>>,
     request: HttpRequest,

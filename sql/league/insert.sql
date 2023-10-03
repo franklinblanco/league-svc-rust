@@ -1,5 +1,4 @@
 INSERT INTO league (
-    id,
     owner_id,
     sport_id,
     place_id,
@@ -13,7 +12,6 @@ INSERT INTO league (
     max_players,
     description
 ) VALUES (
-    NULL,
     $1,
     $2,
     $3,

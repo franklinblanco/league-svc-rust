@@ -21,6 +21,8 @@ pub async fn create_league(
 ) -> ServiceResponse<League> {
     // TODO: Validation: League time must be in the future
     // TODO: Validate user doesn't have more than 10 leagues open?
+    // TODO: ALL VALIDATIONS: League maxplayers > 1
+    // TODO: PLACE ID EXISTS, COST TO JOIN ISN'T NEGATIVE, ETC
     Ok(x_u_res_db_or_sr!(insert_league(transaction, League::from_league_creation_dto(league, user_id)).await))
 }
 

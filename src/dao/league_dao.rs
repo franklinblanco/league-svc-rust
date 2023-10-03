@@ -76,7 +76,7 @@ pub async fn get_leagues_by_player_limited_to(
         League,
         "sql/league/get_by_player_limited.sql",
         player_id,
-        LeagueVisibility::Unlisted.to_string(),
+        LeagueVisibility::Unlisted as _,
         offset
     )
     .fetch_all(conn)

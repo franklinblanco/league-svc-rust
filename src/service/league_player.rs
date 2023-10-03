@@ -83,6 +83,7 @@ pub async fn request_to_join_league(
         LeagueVisibility::Unlisted => LeaguePlayerStatus::Denied,
     };
     // Insert league_player_status into DB
+    if league.owner_id == user_id { league_player_to_insert.status = LeaguePlayerStatus::Joined }
     league_player_to_insert.status = join_request_status;
     let persisted_league_player = x_u_res_db_or_sr!(
         league_player_dao::insert_league_player(transaction, &league_player_to_insert).await
@@ -93,14 +94,15 @@ pub async fn request_to_join_league(
 
 pub async fn get_league_request_status(
     transaction: &mut PgConnection,
+    player_id: i32,
     join_req: JoinRequest,
-    user_id: i32,
+    _user_id: i32,
 ) -> ServiceResponse<LeaguePlayer> {
     match x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
             transaction,
             join_req.league_id,
-            user_id
+            player_id
         )
         .await
     )
@@ -118,6 +120,7 @@ pub async fn get_league_request_status(
 pub async fn change_league_request_status(
     transaction: &mut PgConnection,
     new_status: ApprovalStatus,
+    player_id: i32,
     join_req: JoinRequest,
     user_id: i32,
 ) -> ServiceResponse<LeaguePlayer> {
@@ -134,7 +137,7 @@ pub async fn change_league_request_status(
         league_player_dao::get_league_players_by_player_id_and_league_id(
             transaction,
             join_req.league_id,
-            user_id
+            player_id
         )
         .await
     );
@@ -196,7 +199,7 @@ pub async fn get_all_players_in_league(
     service_error!(
         404,
         SE::NotFoundError(
-            "No players found with join requests to the league specified.".into()
+            "No players found with joined join requests to the league specified.".into()
         )
     )
 }
@@ -268,7 +271,7 @@ fn attempt_league_request_status_change(
                     last_error = service_error!(400, SE::NotAllowed("Cannot approve LeaguePlayer with non-approvable status.".into()));
                 }
             }
-            ApprovalStatus::Denied => {
+            ApprovalStatus::Denied => { // TODO: You can kick yourself and not be allowed back into your own league. Check this!
                 match persisted_status {
                     LeaguePlayerStatus::Joined => return Ok((LeaguePlayerStatus::Kicked, index)),
                     LeaguePlayerStatus::Requested => {
