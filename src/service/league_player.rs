@@ -256,13 +256,13 @@ fn attempt_league_request_status_change(
     persisted_league_players: &Vec<LeaguePlayer>,
     new_status: ApprovalStatus,
 ) -> Result<(LeaguePlayerStatus, usize), ServiceResponse<LeaguePlayer>> {
-    let mut last_error: ServiceResponse<LeaguePlayer>;
+    let mut last_error: ServiceResponse<LeaguePlayer> = service_error!(400, SE::NotAllowed("No league players.".into()));
 
     for (index, persisted_league_player) in persisted_league_players.iter().enumerate() {
-        let persisted_status = persisted_league_player.status;
+        let persisted_status = &persisted_league_player.status;
         match new_status {
             ApprovalStatus::Approved => {
-                if persisted_status == LeaguePlayerStatus::Requested {
+                if persisted_status == &LeaguePlayerStatus::Requested {
                     return Ok((LeaguePlayerStatus::Joined, index));
                 } else {
                     last_error = service_error!(400, SE::NotAllowed("Cannot approve LeaguePlayer with non-approvable status.".into()));
