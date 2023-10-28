@@ -52,12 +52,12 @@ pub async fn edit_player_profile(
     ) {
         Some(found_player) => found_player,
         None => {
-            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
+            return service_error!(404, SE::NotFoundError { message: "Could not find player with id. Something went wrong.".into()})
         }
     };
     let player_to_update = x_u_res_or_sr!(
         converter::update_player_struct(player, persisted_player),
-        SE::NotAllowed(String::new())
+        SE::NotAllowed { message: String::new()}
     );
     Ok(x_u_res_db_or_sr!(player_dao::update_player_with_id(transaction, player_to_update).await))
 }
@@ -77,7 +77,7 @@ pub async fn login(
         player_dao::get_player_with_id(transaction, persisted_token.user_id).await
     ) {
         Some(_) => Ok(persisted_token),
-        None => service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into())),
+        None => service_error!(404, SE::NotFoundError { message: "Could not find player with id. Something went wrong.".into()}),
     }
 }
 
@@ -91,7 +91,7 @@ pub async fn get_player_profile(
     ) {
         Some(player) => player,
         None => {
-            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
+            return service_error!(404, SE::NotFoundError { message: "Could not find player with id. Something went wrong.".into()})
         }
     };
 
@@ -121,7 +121,7 @@ pub async fn get_player_trusted_list(
     ) {
         Some(player) => player,
         None => {
-            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
+            return service_error!(404, SE::NotFoundError { message: "Could not find player with id. Something went wrong.".into()})
         }
     };
 
@@ -140,7 +140,7 @@ pub async fn get_player_trusted_by_list(
     ) {
         Some(player) => player,
         None => {
-            return service_error!(404, SE::NotFoundError("Could not find player with id. Something went wrong.".into()))
+            return service_error!(404, SE::NotFoundError { message: "Could not find player with id. Something went wrong.".into()})
         }
     };
 

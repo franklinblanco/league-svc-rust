@@ -7,7 +7,7 @@ macro_rules! create_tx {
             Ok(tx) => tx,
             Err(error) => {
                 log::error!("{error}");
-                return actix_web_utils::TypedResponse::std_error(500, err::Error::new(err::trace!()).error_type(err::ErrorType::Service(err::ServiceError::DatabaseError(error))).message("Error getting database transaction from pool in pre-service-macro"));
+                return actix_web_utils::TypedResponse::std_error(500, err::Error::new(err::trace!()).error_type(err::ErrorType::Service { error: err::ServiceError::DatabaseError { error }}).message("Error getting database transaction from pool in pre-service-macro"));
             },
         }
     };

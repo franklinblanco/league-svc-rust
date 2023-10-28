@@ -30,7 +30,7 @@ pub async fn create_league(
 pub async fn get_league(transaction: &mut PgConnection, id: i32, _user_id: i32) -> ServiceResponse<League> {
     match x_u_res_db_or_sr!(get_league_with_id(transaction, id).await) {
         Some(league) => Ok(league),
-        None => service_error!(404, SE::NotFoundError("League not found.".into()))
+        None => service_error!(404, SE::NotFoundError { message: "League not found.".into()})
     }
 }
 
@@ -44,7 +44,7 @@ pub async fn get_open_leagues_in_my_area(
         get_player_with_id(transaction, user_id).await
     ) {
         Some(player) => player,
-        None => return service_error!(404, SE::NotFoundError("Player profile not found.".into()))
+        None => return service_error!(404, SE::NotFoundError { message: "Player profile not found.".into()})
     };
 
     let res = x_u_res_db_or_sr!(
@@ -53,7 +53,7 @@ pub async fn get_open_leagues_in_my_area(
     if res.len() > 0 {
         return Ok(res);
     }
-    service_error!(404, SE::NotFoundError("No leagues found for your country.".into()))
+    service_error!(404, SE::NotFoundError { message: "No leagues found for your country.".into()})
 }
 
 /// This route is used to get leagues from a country
@@ -70,7 +70,7 @@ pub async fn get_leagues_in_country(
     if res.len() > 0 {
         return Ok(res);
     }
-    service_error!(404, SE::NotFoundError("No leagues found for your country.".into()))
+    service_error!(404, SE::NotFoundError { message: "No leagues found for your country.".into()})
 }
 
 /// This route is used to get leagues from a country
@@ -86,7 +86,7 @@ pub async fn get_leagues_in_place(
     if res.len() > 0 {
         return Ok(res);
     }
-    service_error!(404, SE::NotFoundError("No leagues found for place.".into()))
+    service_error!(404, SE::NotFoundError { message: "No leagues found for place.".into()})
 }
 
 /// Only shows non unlisted leagues //TODO: Make a new endpoint to get MyLeagues (Only callable by the owner)
@@ -102,7 +102,7 @@ pub async fn get_leagues_hosted_by_player(
     if leagues.len() > 0 {
         return Ok(leagues);
     }
-    service_error!(404, SE::NotFoundError("No leagues found hosted by player.".into()))
+    service_error!(404, SE::NotFoundError { message: "No leagues found hosted by player.".into()})
 }
 
 pub async fn get_average_league_age(
@@ -117,8 +117,7 @@ pub async fn get_average_league_age(
     for player in all_players_in_league {
         age_total = age_total
             + (Utc::now()
-                .date_naive()
-                .signed_duration_since(player.birth_date)
+            .signed_duration_since(player.birth_date)
                 .num_days()
                 / 365) as u8;
         amount += 1;

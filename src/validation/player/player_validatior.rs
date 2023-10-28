@@ -1,10 +1,10 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use err::MessageResource;
 
 pub fn validate_name(_name: &String) -> Result<(), MessageResource> {
     Ok(())
 }
-pub fn validate_birth_date(_birth_date: &NaiveDate) -> Result<(), MessageResource> {
+pub fn validate_birth_date(_birth_date: &DateTime<Utc>) -> Result<(), MessageResource> {
     //TODO: Validate date is not in the future & that it's at least a certain age.
     Ok(())
 }

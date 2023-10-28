@@ -9,7 +9,7 @@ pub async fn authenticate_user_for_route<T: Serialize>(conn: &PgPool, request: H
     let mut database_connection = match conn.acquire().await {
         Ok(connection) => connection,
         Err(error) => {
-            return Err(TypedResponse::std_error(500, Error::new(trace!()).error_type(err::ErrorType::Service(err::ServiceError::DatabaseError(error))).message("Error getting database connection from pool in authentication function.")));
+            return Err(TypedResponse::std_error(500, Error::new(trace!()).error_type(err::ErrorType::Service { error: err::ServiceError::DatabaseError { error }}).message("Error getting database connection from pool in authentication function.")));
         },
     };
     let error_to_return = TypedResponse::std_error(401, Error::new(trace!()).error_type(err::ErrorType::Privilege).message("authHeader not present or is in incorrect format. Make sure it comes as a AuthenticateUserDto Json"));

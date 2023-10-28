@@ -24,14 +24,14 @@ pub async fn request_to_join_league(
         league_dao::get_league_with_id(transaction, join_req.league_id).await
     ) {
         Some(league) => league,
-        None => return service_error!(404, SE::NotFoundError("No league found with that ID".into())),
+        None => return service_error!(404, SE::NotFoundError { message: "No league found with that ID".into()}),
     };
     // Get Player profile
     match x_u_res_db_or_sr!(
         player_dao::get_player_with_id(transaction, user_id).await
     ) {
         Some(player) => player,
-        None => return service_error!(404, SE::NotFoundError("Player profile not found.".into()))
+        None => return service_error!(404, SE::NotFoundError { message: "Player profile not found.".into()})
     };
     // Build LeaguePlayer
     let mut league_player_to_insert = LeaguePlayer::from_join_req(join_req, user_id);
@@ -53,7 +53,7 @@ pub async fn request_to_join_league(
             // Parse league player status into enum
             let persisted_league_player_status = persisted_league_player.status;
             if persisted_league_player_status.get_status_type() == StatusType::Active {
-                return service_error!(400, SE::AlreadyExistsError("You already have an active join request for this league.".into()));
+                return service_error!(400, SE::AlreadyExistsError { message: "You already have an active join request for this league.".into()});
             }
             player_has_inactive_persisted_league_players = true;
         }
@@ -64,7 +64,7 @@ pub async fn request_to_join_league(
     let join_request_status = match league.visibility {
         // If player has previous inactive LeaguePlayers then don't allow a rejoin.
         LeagueVisibility::Public => match player_has_inactive_persisted_league_players {
-            true => return service_error!(400, SE::AlreadyExistsError("Player has already left or been kicked out of this league.".into())),
+            true => return service_error!(400, SE::AlreadyExistsError { message: "Player has already left or been kicked out of this league.".into()}),
             false => LeaguePlayerStatus::Joined,
         },
         // If player is trusted then Join the league.
@@ -111,7 +111,7 @@ pub async fn get_league_request_status(
         Some(league_player) => {
             Ok(league_player)
         }
-        None => service_error!(404, SE::NotFoundError("LeaguePlayer not found with given ids.".into()))
+        None => service_error!(404, SE::NotFoundError { message: "LeaguePlayer not found with given ids.".into()})
     }
 }
 
@@ -128,10 +128,10 @@ pub async fn change_league_request_status(
         league_dao::get_league_with_id(transaction, join_req.league_id).await
     ) {
         Some(league) => league,
-        None => return service_error!(404, SE::NotFoundError("League not found with given id.".into()))
+        None => return service_error!(404, SE::NotFoundError { message: "League not found with given id.".into()})
     };
     if league.owner_id != user_id {
-        return service_error!(404, SE::NotFoundError("You don't own this league...".into()));
+        return service_error!(404, SE::NotFoundError { message: "You don't own this league...".into()});
     }
     let persisted_league_players = x_u_res_db_or_sr!(
         league_player_dao::get_league_players_by_player_id_and_league_id(
@@ -143,7 +143,7 @@ pub async fn change_league_request_status(
     );
 
     if persisted_league_players.is_empty() {
-        return service_error!(404, SE::NotFoundError("No LeaguePlayer found with given ids.".into()));
+        return service_error!(404, SE::NotFoundError { message: "No LeaguePlayer found with given ids.".into()});
     }
 
     match attempt_league_request_status_change(&persisted_league_players, new_status) {
@@ -179,7 +179,7 @@ pub async fn get_all_leagues_player_has_applied_to(
     if resulting_leagues.len() > 0 {
         return Ok(resulting_leagues);
     }
-    service_error!(404, SE::NotFoundError("No leagues found with player join requests.".into()))
+    service_error!(404, SE::NotFoundError { message: "No leagues found with player join requests.".into()})
 }
 
 pub async fn get_all_players_in_league(
@@ -198,9 +198,9 @@ pub async fn get_all_players_in_league(
     }
     service_error!(
         404,
-        SE::NotFoundError(
+        SE::NotFoundError { message: 
             "No players found with joined join requests to the league specified.".into()
-        )
+        }
     )
 }
 
@@ -227,7 +227,7 @@ pub async fn leave_league(
                 _ => {
                     return service_error!(
                         500,
-                        SE::UnexpectedError("Something went wrong.".into())
+                        SE::UnexpectedError { message: "Something went wrong.".into()}
                     )
                 }
             };
@@ -246,7 +246,7 @@ pub async fn leave_league(
         "Player tried to leave without having active leagues... LeaguePlayers: {:#?}",
         league_players
     );
-    service_error!(404, SE::NotFoundError("No players found with active join requests to the league specified.".into()))
+    service_error!(404, SE::NotFoundError { message: "No players found with active join requests to the league specified.".into()})
 }
 
 // #################
@@ -259,7 +259,7 @@ fn attempt_league_request_status_change(
     persisted_league_players: &Vec<LeaguePlayer>,
     new_status: ApprovalStatus,
 ) -> Result<(LeaguePlayerStatus, usize), ServiceResponse<LeaguePlayer>> {
-    let mut last_error: ServiceResponse<LeaguePlayer> = service_error!(400, SE::NotAllowed("No league players.".into()));
+    let mut last_error: ServiceResponse<LeaguePlayer> = service_error!(400, SE::NotAllowed { message: "No league players.".into()});
 
     for (index, persisted_league_player) in persisted_league_players.iter().enumerate() {
         let persisted_status = &persisted_league_player.status;
@@ -268,7 +268,7 @@ fn attempt_league_request_status_change(
                 if persisted_status == &LeaguePlayerStatus::Requested {
                     return Ok((LeaguePlayerStatus::Joined, index));
                 } else {
-                    last_error = service_error!(400, SE::NotAllowed("Cannot approve LeaguePlayer with non-approvable status.".into()));
+                    last_error = service_error!(400, SE::NotAllowed { message: "Cannot approve LeaguePlayer with non-approvable status.".into()});
                 }
             }
             ApprovalStatus::Denied => { // TODO: You can kick yourself and not be allowed back into your own league. Check this!
@@ -279,7 +279,7 @@ fn attempt_league_request_status_change(
                     }
                     LeaguePlayerStatus::Invited => return Ok((LeaguePlayerStatus::Denied, index)),
                     _ => {
-                        last_error = service_error!(400, SE::NotAllowed("Cannot deny LeaguePlayer with non-deniable status.".into())
+                        last_error = service_error!(400, SE::NotAllowed { message: "Cannot deny LeaguePlayer with non-deniable status.".into()}
                         );
                     }
                 };

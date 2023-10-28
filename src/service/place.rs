@@ -18,7 +18,7 @@ pub async fn get_places_for_country_paged(
         return Ok(res);
     }
     
-    service_error!(404, SE::NotFoundError("No places found for your country.".into()))
+    service_error!(404, SE::NotFoundError { message: "No places found for your country.".into()})
 }
 
 pub async fn get_places_for_sport(
@@ -34,7 +34,7 @@ pub async fn get_places_for_sport(
     if res.len() > 0 {
         return Ok(res);
     }
-    service_error!(404, SE::NotFoundError("No places found for selected sport.".into()))
+    service_error!(404, SE::NotFoundError { message: "No places found for selected sport.".into()})
 }
 
 pub async fn get_places_near_me(
@@ -47,7 +47,7 @@ pub async fn get_places_near_me(
     ) {
         Some(player) => player,
         None => {
-            return service_error!(404, SE::NotFoundError("Player profile not found".into()))
+            return service_error!(404, SE::NotFoundError { message: "Player profile not found".into()})
         }
     };
 
@@ -63,7 +63,7 @@ pub async fn get_places_near_me(
     if res.len() > 0 {
         return Ok(res);
     }
-    service_error!(404, SE::NotFoundError("No places found for your country.".into()))
+    service_error!(404, SE::NotFoundError { message: "No places found for your country.".into()})
 }
 
 pub async fn insert_all_places_from_list(conn: &mut PgConnection, ) {
